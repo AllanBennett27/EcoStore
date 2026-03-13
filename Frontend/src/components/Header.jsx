@@ -1,0 +1,194 @@
+import { useState } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Badge,
+  Box,
+  InputBase,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Divider,
+} from "@mui/material";
+import {
+  EnergySavingsLeaf,
+  Search,
+  ShoppingCart,
+  AccountCircle,
+  Logout,
+  Person,
+  Inventory,
+  Assessment,
+} from "@mui/icons-material";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+
+function Header({ showSearch = false, searchValue = "", onSearchChange }) {
+  const { cartCount, clearCart } = useCart();
+  const { user, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleLogout = () => {
+    handleMenuClose();
+    logout();
+    clearCart();
+    navigate("/auth");
+  };
+
+  return (
+    <AppBar position="sticky" sx={{ bgcolor: "primary.dark" }}>
+      <Toolbar sx={{ gap: 2 }}>
+        {/* Branding */}
+        <Box
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          <EnergySavingsLeaf sx={{ fontSize: 32 }} />
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            sx={{ display: { xs: "none", sm: "block" } }}
+          >
+            Ecostore
+          </Typography>
+        </Box>
+
+        {/* Search Bar - only on products and cart pages */}
+        {showSearch && (
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              maxWidth: 600,
+              mx: "auto",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                bgcolor: "rgba(255,255,255,0.15)",
+                borderRadius: 2,
+                px: 2,
+                width: "100%",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+              }}
+            >
+              <Search sx={{ color: "rgba(255,255,255,0.7)", mr: 1 }} />
+              <InputBase
+                placeholder="Buscar productos..."
+                value={searchValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                sx={{
+                  color: "#fff",
+                  flex: 1,
+                  py: 0.8,
+                  "& ::placeholder": { color: "rgba(255,255,255,0.7)" },
+                }}
+              />
+            </Box>
+          </Box>
+        )}
+
+        {/* Spacer when no search bar */}
+        {!showSearch && <Box sx={{ flex: 1 }} />}
+
+        {/* Actions */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          {!isAdmin && (
+            <IconButton component={RouterLink} to="/cart" color="inherit">
+              <Badge badgeContent={cartCount} color="secondary">
+                <ShoppingCart />
+              </Badge>
+            </IconButton>
+          )}
+          <IconButton color="inherit" onClick={handleMenuOpen}>
+            <AccountCircle />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleMenuClose}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+            slotProps={{
+              paper: {
+                sx: { borderRadius: 2, minWidth: 200, mt: 1 },
+              },
+            }}
+          >
+            {user && (
+              <Box sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600}>
+                  {user.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {user.email}
+                </Typography>
+              </Box>
+            )}
+            {user && <Divider />}
+            <MenuItem onClick={handleMenuClose}>
+              <ListItemIcon>
+                <Person fontSize="small" />
+              </ListItemIcon>
+              Mi perfil
+            </MenuItem>
+            {isAdmin && <Divider />}
+            {isAdmin && (
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  navigate("/admin/products");
+                }}
+              >
+                <ListItemIcon>
+                  <Inventory fontSize="small" color="primary" />
+                </ListItemIcon>
+                Panel Admin
+              </MenuItem>
+            )}
+            {isAdmin && (
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  navigate("/admin/reports");
+                }}
+              >
+                <ListItemIcon>
+                  <Assessment fontSize="small" color="primary" />
+                </ListItemIcon>
+                Reportes
+              </MenuItem>
+            )}
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <Logout fontSize="small" color="error" />
+              </ListItemIcon>
+              Cerrar sesion
+            </MenuItem>
+          </Menu>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+}
+
+export default Header;
