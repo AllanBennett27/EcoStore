@@ -24,6 +24,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -38,6 +39,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 app.MapProductoEndpoints();
+app.MapAuthEndpoints();
 app.Run();
 
 

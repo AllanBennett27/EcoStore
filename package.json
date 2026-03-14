@@ -1,0 +1,8 @@
+{
+ "scripts": {
+  "clean": "rimraf backend/Ecommerce.API/bin backend/Ecommerce.API/obj backend/Ecommerce.Infrastructure/bin backend/Ecommerce.Infrastructure/obj frontend/dist"
+},
+  "devDependencies": {
+    "rimraf": "^6.1.3"
+  }
+}

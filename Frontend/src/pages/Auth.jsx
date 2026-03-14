@@ -11,10 +11,10 @@ import {
   Tab,
   InputAdornment,
   IconButton,
-  Checkbox,
-  FormControlLabel,
   Divider,
   Link,
+  Alert,
+  Grid,
 } from "@mui/material";
 import {
   EnergySavingsLeaf,
@@ -23,42 +23,77 @@ import {
   Email,
   Lock,
   Person,
+  Phone,
+  Home,
 } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
 
 function Auth() {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, loading, error, clearError } = useAuth();
   const [tab, setTab] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
-    name: "",
-    email: "",
+    nombre: "",
+    apellido: "",
+    correo: "",
     password: "",
     confirmPassword: "",
+    telefono: "",
+    direccion: "",
   });
 
-  const handleLoginChange = (e) => {
+  const handleTabChange = (_, v) => {
+    setTab(v);
+    clearError();
+    setRegisterSuccess(false);
+  };
+
+  const handleLoginChange = (e) =>
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
-  };
 
-  const handleRegisterChange = (e) => {
+  const handleRegisterChange = (e) =>
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+
+  const passwordMismatch =
+    registerData.confirmPassword !== "" &&
+    registerData.password !== registerData.confirmPassword;
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    const result = await login(loginData.email, loginData.password);
+    if (result.success) {
+      navigate(result.role.includes("admin") ? "/admin/products" : "/");
+    }
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    login(loginData.email, loginData.password);
-    navigate("/");
-  };
-
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault();
-    register(registerData.name, registerData.email, registerData.password);
-    navigate("/");
+    if (passwordMismatch) return;
+    const result = await register({
+      nombre: registerData.nombre,
+      apellido: registerData.apellido,
+      correo: registerData.correo,
+      password: registerData.password,
+      telefono: registerData.telefono || "",
+      direccion: registerData.direccion || "",
+    });
+    if (result.success) {
+      setRegisterSuccess(true);
+      setRegisterData({
+        nombre: "",
+        apellido: "",
+        correo: "",
+        password: "",
+        confirmPassword: "",
+        telefono: "",
+        direccion: "",
+      });
+    }
   };
 
   return (
@@ -75,12 +110,7 @@ function Auth() {
     >
       <Card
         elevation={12}
-        sx={{
-          width: "100%",
-          maxWidth: 440,
-          borderRadius: 4,
-          overflow: "visible",
-        }}
+        sx={{ width: "100%", maxWidth: 480, borderRadius: 4, overflow: "visible" }}
       >
         {/* Branding */}
         <Box
@@ -118,15 +148,12 @@ function Auth() {
         {/* Tabs */}
         <Tabs
           value={tab}
-          onChange={(_, v) => setTab(v)}
+          onChange={handleTabChange}
           variant="fullWidth"
           sx={{
             mx: 3,
             mt: 1,
-            "& .MuiTabs-indicator": {
-              height: 3,
-              borderRadius: 2,
-            },
+            "& .MuiTabs-indicator": { height: 3, borderRadius: 2 },
           }}
         >
           <Tab label="Iniciar Sesion" sx={{ fontWeight: 600 }} />
@@ -139,6 +166,11 @@ function Auth() {
           {/* Login Form */}
           {tab === 0 && (
             <Box component="form" onSubmit={handleLoginSubmit}>
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
               <TextField
                 fullWidth
                 label="Correo electronico"
@@ -147,6 +179,7 @@ function Auth() {
                 value={loginData.email}
                 onChange={handleLoginChange}
                 margin="normal"
+                required
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -163,6 +196,7 @@ function Auth() {
                 value={loginData.password}
                 onChange={handleLoginChange}
                 margin="normal"
+                required
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -183,34 +217,12 @@ function Auth() {
                 }}
               />
 
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mt: 1,
-                }}
-              >
-                <FormControlLabel
-                  control={<Checkbox size="small" color="primary" />}
-                  label={<Typography variant="body2">Recordarme</Typography>}
-                />
-                <Link
-                  href="#"
-                  variant="body2"
-                  color="primary"
-                  underline="hover"
-                  sx={{ fontWeight: 500 }}
-                >
-                  Olvidaste tu contrasena?
-                </Link>
-              </Box>
-
               <Button
                 type="submit"
                 variant="contained"
                 fullWidth
                 size="large"
+                disabled={loading}
                 sx={{
                   mt: 3,
                   mb: 1,
@@ -218,12 +230,10 @@ function Auth() {
                   fontSize: "1rem",
                   borderRadius: 3,
                   boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
-                  "&:hover": {
-                    boxShadow: "0 6px 16px rgba(46, 125, 50, 0.4)",
-                  },
+                  "&:hover": { boxShadow: "0 6px 16px rgba(46, 125, 50, 0.4)" },
                 }}
               >
-                Iniciar Sesion
+                {loading ? "Iniciando..." : "Iniciar Sesion"}
               </Button>
 
               <Typography
@@ -240,7 +250,7 @@ function Auth() {
                   color="primary"
                   fontWeight={600}
                   underline="hover"
-                  onClick={() => setTab(1)}
+                  onClick={() => handleTabChange(null, 1)}
                 >
                   Registrate aqui
                 </Link>
@@ -251,29 +261,65 @@ function Auth() {
           {/* Register Form */}
           {tab === 1 && (
             <Box component="form" onSubmit={handleRegisterSubmit}>
-              <TextField
-                fullWidth
-                label="Nombre completo"
-                name="name"
-                value={registerData.name}
-                onChange={handleRegisterChange}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+              {registerSuccess && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Cuenta creada exitosamente. Inicia sesion.
+                </Alert>
+              )}
+
+              <Grid container spacing={1.5}>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Nombre"
+                    name="nombre"
+                    value={registerData.nombre}
+                    onChange={handleRegisterChange}
+                    margin="normal"
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="primary" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Apellido"
+                    name="apellido"
+                    value={registerData.apellido}
+                    onChange={handleRegisterChange}
+                    margin="normal"
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="primary" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </Grid>
+
               <TextField
                 fullWidth
                 label="Correo electronico"
-                name="email"
+                name="correo"
                 type="email"
-                value={registerData.email}
+                value={registerData.correo}
                 onChange={handleRegisterChange}
                 margin="normal"
+                required
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -290,6 +336,7 @@ function Auth() {
                 value={registerData.password}
                 onChange={handleRegisterChange}
                 margin="normal"
+                required
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -317,6 +364,9 @@ function Auth() {
                 value={registerData.confirmPassword}
                 onChange={handleRegisterChange}
                 margin="normal"
+                required
+                error={passwordMismatch}
+                helperText={passwordMismatch ? "Las contrasenas no coinciden" : ""}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -326,18 +376,42 @@ function Auth() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         edge="end"
                         size="small"
                       >
-                        {showConfirmPassword ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Telefono (opcional)"
+                name="telefono"
+                value={registerData.telefono}
+                onChange={handleRegisterChange}
+                margin="normal"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Phone color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Direccion (opcional)"
+                name="direccion"
+                value={registerData.direccion}
+                onChange={handleRegisterChange}
+                margin="normal"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Home color="primary" />
                     </InputAdornment>
                   ),
                 }}
@@ -348,6 +422,7 @@ function Auth() {
                 variant="contained"
                 fullWidth
                 size="large"
+                disabled={loading || passwordMismatch}
                 sx={{
                   mt: 3,
                   mb: 1,
@@ -355,12 +430,10 @@ function Auth() {
                   fontSize: "1rem",
                   borderRadius: 3,
                   boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
-                  "&:hover": {
-                    boxShadow: "0 6px 16px rgba(46, 125, 50, 0.4)",
-                  },
+                  "&:hover": { boxShadow: "0 6px 16px rgba(46, 125, 50, 0.4)" },
                 }}
               >
-                Crear Cuenta
+                {loading ? "Registrando..." : "Crear Cuenta"}
               </Button>
 
               <Typography
@@ -377,7 +450,7 @@ function Auth() {
                   color="primary"
                   fontWeight={600}
                   underline="hover"
-                  onClick={() => setTab(0)}
+                  onClick={() => handleTabChange(null, 0)}
                 >
                   Inicia sesion
                 </Link>

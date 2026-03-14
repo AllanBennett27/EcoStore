@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ecommerce.Domain.Entities;
-
+[Table("Rol")]
 public class Rol
 {
     [Key]
@@ -16,7 +16,7 @@ public class Rol
 
     [StringLength(255)]
     [Column("descripcion")]
-    public string? Descripcion { get; set; }
+    public string? Descripcion { get; set; } = string.Empty;
 
     // Relación inversa
     public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();

@@ -1,0 +1,25 @@
+# --- .NET (Backend) ---
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.userosscache
+*.sln.docstates
+*.dbmdl
+*.dbproj.schemaview
+
+# --- Node (Frontend) ---
+node_modules/
+dist/
+build/
+.env
+
+# --- IDEs (Rider, VS Code, VS) ---
+.idea/
+.vs/
+.vscode/
+
+# --- Otros ---
+.DS_Store
+*.log
