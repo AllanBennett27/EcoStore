@@ -1,15 +1,31 @@
-namespace Ecommerce.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
+namespace Ecommerce.Domain.Entities;
+[Table("Producto")]
 public class Producto
 {
-    public int IdProducto { get; set; } // Llave Primaria
-    public string NombreProducto { get; set; } = string.Empty;
-    public string? Descripcion { get; set; }
-    public decimal Precio { get; set; }
-    public string? ImagenUrl { get; set; }
-    public int IdCategoria { get; set; } // Llave Foránea
-    public string Estado { get; set; } = "Activo";
+    [Key]
+    [Column("id_producto")]
+    public int IdProducto { get; set; }
 
-    // Propiedades de navegación (Para que EF entienda las relaciones)
+    [Column("nombre_producto")]
+    public string NombreProducto { get; set; } = string.Empty;
+
+    [Column("descripcion")]
+    public string? Descripcion { get; set; }
+
+    [Column("precio")]
+    public decimal Precio { get; set; }
+
+    [Column("imagen_url")] 
+    public string? ImagenUrl { get; set; }
+
+    [Column("estado")]
+    public string Estado { get; set; } = "Activo";
+    [Column("id_categoria")]
+    public int IdCategoria { get; set; }
+
+    [ForeignKey("IdCategoria")]
     public virtual Categoria Categoria { get; set; } = null!;
 }

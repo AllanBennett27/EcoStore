@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ecommerce.Domain.Entities; // Asegúrate de tener este import para ver tus clases
+using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.Infrastructure.Data;
 

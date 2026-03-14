@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecommerce.Infrastructure", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecommerce.Application", "..\src\Ecommerce.Application\Ecommerce.Application\Ecommerce.Application.csproj", "{BA2D1BBB-2119-409F-A0C3-D44DCA0D3D97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eccomerce.API", "..\src\Ecommerce.API\Eccomerce.API\Eccomerce.API.csproj", "{E6CD1695-729A-440E-9080-825734386C51}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecommerce.API", "..\src\Ecommerce.API\Ecommerce.API\Ecommerce.API.csproj", "{E6CD1695-729A-440E-9080-825734386C51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

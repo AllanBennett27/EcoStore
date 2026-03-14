@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Ecommerce.Domain.Entities;
 
 public class Pedido
 {
+    [Key]
     public int IdPedido { get; set; }
     public int IdUsuario { get; set; }
     public DateTime FechaPedido { get; set; } = DateTime.Now;

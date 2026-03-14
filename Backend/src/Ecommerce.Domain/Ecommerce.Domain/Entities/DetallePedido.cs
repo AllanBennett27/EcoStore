@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Ecommerce.Domain.Entities;
 
 public class DetallePedido
 {
+    [Key]
     public int IdDetallePedido { get; set; }
     public int IdPedido { get; set; }
     public int IdProducto { get; set; }

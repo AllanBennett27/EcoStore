@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Ecommerce.Domain.Entities;
 
 public class Inventario
 {
+    [Key]
     public int IdInventario { get; set; }
     public int IdProducto { get; set; }
     public int StockActual { get; set; }
