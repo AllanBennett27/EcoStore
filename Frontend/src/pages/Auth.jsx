@@ -14,7 +14,6 @@ import {
   Divider,
   Link,
   Alert,
-  Grid,
 } from "@mui/material";
 import {
   EnergySavingsLeaf,
@@ -25,6 +24,7 @@ import {
   Person,
   Phone,
   Home,
+  ArrowBack,
 } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
 
@@ -106,11 +106,24 @@ function Auth() {
         background:
           "linear-gradient(135deg, #1b5e20 0%, #2e7d32 30%, #4caf50 60%, #81c784 100%)",
         padding: 2,
+        position: "relative",
       }}
     >
+      <IconButton
+        onClick={() => navigate("/")}
+        sx={{
+          position: "fixed",
+          top: 16,
+          left: 16,
+          color: "#fff",
+          "&:hover": { bgcolor: "rgba(255,255,255,0.15)" },
+        }}
+      >
+        <Home sx={{ fontSize: 36, fontWeight: 900 }} />
+      </IconButton>
       <Card
         elevation={12}
-        sx={{ width: "100%", maxWidth: 480, borderRadius: 4, overflow: "visible" }}
+        sx={{ width: "100%", maxWidth: 560, borderRadius: 4, overflow: "visible" }}
       >
         {/* Branding */}
         <Box
@@ -123,6 +136,7 @@ function Auth() {
           }}
         >
           <Box
+            onClick={() => navigate("/")}
             sx={{
               width: 64,
               height: 64,
@@ -133,12 +147,18 @@ function Auth() {
               justifyContent: "center",
               mb: 1.5,
               boxShadow: "0 4px 14px rgba(46, 125, 50, 0.4)",
+              cursor: "pointer",
+              transition: "transform 0.15s, box-shadow 0.15s",
+              "&:hover": {
+                transform: "scale(1.08)",
+                boxShadow: "0 6px 18px rgba(46, 125, 50, 0.55)",
+              },
             }}
           >
             <EnergySavingsLeaf sx={{ fontSize: 36, color: "#fff" }} />
           </Box>
           <Typography variant="h4" fontWeight={700} color="primary.dark">
-            Ecostore
+            EcoStore
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Tu tienda ecologica en linea
@@ -173,6 +193,7 @@ function Auth() {
               )}
               <TextField
                 fullWidth
+                size="small"
                 label="Correo electronico"
                 name="email"
                 type="email"
@@ -190,6 +211,7 @@ function Auth() {
               />
               <TextField
                 fullWidth
+                size="small"
                 label="Contrasena"
                 name="password"
                 type={showPassword ? "text" : "password"}
@@ -226,7 +248,7 @@ function Auth() {
                 sx={{
                   mt: 3,
                   mb: 1,
-                  py: 1.4,
+                  py: 1.2,
                   fontSize: "1rem",
                   borderRadius: 3,
                   boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
@@ -272,47 +294,77 @@ function Auth() {
                 </Alert>
               )}
 
-              <Grid container spacing={1.5}>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Nombre"
-                    name="nombre"
-                    value={registerData.nombre}
-                    onChange={handleRegisterChange}
-                    margin="normal"
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person color="primary" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Apellido"
-                    name="apellido"
-                    value={registerData.apellido}
-                    onChange={handleRegisterChange}
-                    margin="normal"
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person color="primary" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-              </Grid>
+              {/* Nombre | Apellido */}
+              <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Nombre"
+                  name="nombre"
+                  value={registerData.nombre}
+                  onChange={handleRegisterChange}
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Apellido"
+                  name="apellido"
+                  value={registerData.apellido}
+                  onChange={handleRegisterChange}
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
 
               <TextField
                 fullWidth
+                size="small"
+                label="Telefono (opcional)"
+                name="telefono"
+                value={registerData.telefono}
+                onChange={handleRegisterChange}
+                margin="normal"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Phone color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                size="small"
+                label="Direccion (opcional)"
+                name="direccion"
+                value={registerData.direccion}
+                onChange={handleRegisterChange}
+                margin="normal"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Home color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                size="small"
                 label="Correo electronico"
                 name="correo"
                 type="email"
@@ -330,6 +382,7 @@ function Auth() {
               />
               <TextField
                 fullWidth
+                size="small"
                 label="Contrasena"
                 name="password"
                 type={showPassword ? "text" : "password"}
@@ -358,6 +411,7 @@ function Auth() {
               />
               <TextField
                 fullWidth
+                size="small"
                 label="Confirmar contrasena"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
@@ -386,36 +440,6 @@ function Auth() {
                   ),
                 }}
               />
-              <TextField
-                fullWidth
-                label="Telefono (opcional)"
-                name="telefono"
-                value={registerData.telefono}
-                onChange={handleRegisterChange}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Direccion (opcional)"
-                name="direccion"
-                value={registerData.direccion}
-                onChange={handleRegisterChange}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Home color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
 
               <Button
                 type="submit"
@@ -426,7 +450,7 @@ function Auth() {
                 sx={{
                   mt: 3,
                   mb: 1,
-                  py: 1.4,
+                  py: 1.2,
                   fontSize: "1rem",
                   borderRadius: 3,
                   boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
@@ -459,6 +483,8 @@ function Auth() {
           )}
         </CardContent>
       </Card>
+
+     
     </Box>
   );
 }

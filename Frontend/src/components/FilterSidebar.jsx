@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -7,19 +8,22 @@ import {
   Slider,
   Divider,
   Button,
+  Skeleton,
 } from "@mui/material";
 import { FilterList } from "@mui/icons-material";
-
-const categories = [
-  "Alimentos Organicos",
-  "Cuidado Personal",
-  "Hogar Ecologico",
-  "Bebidas Naturales",
-  "Ropa Sostenible",
-  "Jardineria",
-];
+import { categoriasService } from "../services/api";
 
 function FilterSidebar({ filters, onFilterChange }) {
+  const [categories, setCategories] = useState([]);
+  const [loadingCats, setLoadingCats] = useState(true);
+
+  useEffect(() => {
+    categoriasService.getAll()
+      .then((res) => setCategories(res.data))
+      .catch(() => {})
+      .finally(() => setLoadingCats(false));
+  }, []);
+
   const handleCategoryToggle = (category) => {
     const current = filters.categories || [];
     const updated = current.includes(category)
@@ -69,20 +73,27 @@ function FilterSidebar({ filters, onFilterChange }) {
         Categorias
       </Typography>
       <FormGroup sx={{ mb: 3 }}>
-        {categories.map((cat) => (
-          <FormControlLabel
-            key={cat}
-            control={
-              <Checkbox
-                size="small"
-                color="primary"
-                checked={(filters.categories || []).includes(cat)}
-                onChange={() => handleCategoryToggle(cat)}
-              />
-            }
-            label={<Typography variant="body2">{cat}</Typography>}
-          />
-        ))}
+        {loadingCats
+          ? [1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} height={32} sx={{ mb: 0.5 }} />
+            ))
+          : categories.map((cat) => {
+              const name = cat.nombreCategoria ?? cat.nombre ?? cat;
+              return (
+                <FormControlLabel
+                  key={name}
+                  control={
+                    <Checkbox
+                      size="small"
+                      color="primary"
+                      checked={(filters.categories || []).includes(name)}
+                      onChange={() => handleCategoryToggle(name)}
+                    />
+                  }
+                  label={<Typography variant="body2">{name}</Typography>}
+                />
+              );
+            })}
       </FormGroup>
 
       <Divider sx={{ mb: 2 }} />

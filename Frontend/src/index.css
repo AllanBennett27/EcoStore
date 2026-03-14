@@ -9,3 +9,28 @@ body,
 #root {
     min-height: 100vh;
 }
+
+/* Custom Ecostore scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f8e9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #81c784;
+    border-radius: 4px;
+    border: 2px solid #f1f8e9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #2e7d32;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #81c784 #f1f8e9;
+}

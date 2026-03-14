@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -16,13 +16,17 @@ import {
   ShoppingBag,
   ArrowBack,
   RemoveShoppingCart,
+  Lock,
 } from "@mui/icons-material";
 import Header from "../components/Header";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 function Cart() {
   const { cartItems, updateQuantity, removeFromCart, clearCart, cartTotal } =
     useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filteredItems = cartItems.filter((item) => {
@@ -36,6 +40,41 @@ function Cart() {
 
   const shipping = cartTotal > 500 ? 0 : 50;
   const total = cartTotal + shipping;
+
+  if (!user) {
+    return (
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+        <Header showSearch searchValue={search} onSearchChange={setSearch} />
+        <Box sx={{ textAlign: "center", py: 12, px: 2 }}>
+          <Lock sx={{ fontSize: 80, color: "text.disabled", mb: 2 }} />
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            Tu carrito esta vacio
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+            Inicia sesion para ver tus compras y gestionar tu carrito.
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => navigate("/auth")}
+            sx={{ borderRadius: 3, px: 4, boxShadow: "0 4px 12px rgba(46,125,50,0.3)" }}
+          >
+            Iniciar sesion
+          </Button>
+          <Box sx={{ mt: 2 }}>
+            <Button
+              component={RouterLink}
+              to="/products"
+              startIcon={<ShoppingBag />}
+              color="inherit"
+            >
+              Ver productos
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (

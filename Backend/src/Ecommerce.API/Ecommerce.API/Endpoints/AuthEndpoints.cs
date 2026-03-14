@@ -1,4 +1,5 @@
 using Ecommerce.Application.DTOs;
+using Ecommerce.Application.Services;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Domain.Interfaces;
 
@@ -37,23 +38,20 @@ public static class AuthEndpoints
             })
             .WithName("RegistrarUsuario")
             .WithOpenApi();
-        group.MapPost("/login", async (AuthDto.LoginRequest req, IUsuarioRepository repo) =>
-            {
-                var usuario = await repo.ValidarLoginAsync(req.Email, req.Password);
+        group.MapPost("/login", async (AuthDto.LoginRequest req, IUsuarioRepository repo, TokenService tokenService) =>
+        {
+            var usuario = await repo.ValidarLoginAsync(req.Email, req.Password);
 
-                if (usuario == null)
-                {
-                    return Results.Unauthorized(); 
-                }
-                return Results.Ok(new
-                {
-                    Mensaje = "Login exitoso",
-                    Usuario = usuario.Nombre,
-                    Rol = usuario.Rol.NombreRol
-                });
-            })
-            .WithName("LoginUsuario")
-            .WithOpenApi();
+            if (usuario == null) return Results.Unauthorized();
+
+            // Generamos el token real
+            var token = tokenService.GenerarToken(usuario);
+
+            return Results.Ok(new
+            {
+                Token = token
+            });
+        });
     }
    
 }

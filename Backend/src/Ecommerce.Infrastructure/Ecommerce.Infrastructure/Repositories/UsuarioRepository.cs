@@ -18,6 +18,7 @@ public class UsuarioRepository : IUsuarioRepository
     public async Task<Usuario?> GetByEmailAsync(string correo)
     {
         return await _context.Usuarios
+            .Include(u => u.Rol)
             .FirstOrDefaultAsync(u => u.Correo == correo);
     }
 

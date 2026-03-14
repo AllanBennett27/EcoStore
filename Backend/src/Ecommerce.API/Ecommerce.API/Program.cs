@@ -1,4 +1,6 @@
+using Eccomerce.API.Endpoints;
 using Ecommerce.API.Endpoints;
+using Ecommerce.Application.Services;
 using Ecommerce.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore; 
 using Ecommerce.Infrastructure.Data;
@@ -24,7 +26,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<TokenService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,6 +43,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 app.MapProductoEndpoints();
+app.MapCategoriaEndpoints();
 app.MapAuthEndpoints();
 app.Run();
 

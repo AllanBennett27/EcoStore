@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link as RouterLink } from "react-router-dom";
+import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -13,11 +13,14 @@ import { AddShoppingCart, Add, Remove, ArrowBack } from "@mui/icons-material";
 import Header from "../components/Header";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
+import { useAuth } from "../context/AuthContext";
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { products } = useProducts();
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
 
   const product = products.find((p) => p.id === Number(id));
@@ -44,6 +47,10 @@ function ProductDetail() {
   }
 
   const handleAddToCart = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
@@ -132,7 +139,7 @@ function ProductDetail() {
               color="text.secondary"
               sx={{ lineHeight: 1.8 }}
             >
-              {product.fullDescription}
+              {product.description}
             </Typography>
 
             <Divider sx={{ my: 2.5 }} />

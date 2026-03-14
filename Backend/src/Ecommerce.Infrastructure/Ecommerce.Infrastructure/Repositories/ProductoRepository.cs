@@ -1,5 +1,4 @@
 using Ecommerce.Application.DTOs;
-using Ecommerce.Domain.Entities;
 using Ecommerce.Domain.Interfaces;
 using Ecommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

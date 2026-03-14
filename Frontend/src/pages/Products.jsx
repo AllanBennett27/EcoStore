@@ -1,15 +1,26 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Box, Grid, Typography, CircularProgress, Alert } from "@mui/material";
 import Header from "../components/Header";
 import FilterSidebar from "../components/FilterSidebar";
 import ProductCard from "../components/ProductCard";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
+import { useAuth } from "../context/AuthContext";
 
 function Products() {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { products, loading, error } = useProducts();
+  const { user } = useAuth();
+
+  const handleAddToCart = (product) => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    addToCart(product);
+  };
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
 
@@ -18,6 +29,14 @@ function Products() {
     categories: categoryFromUrl ? [categoryFromUrl] : [],
     priceRange: [0, 500],
   });
+
+  // Sync URL category param whenever it changes (e.g. clicking "Ver más" from Home)
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      categories: categoryFromUrl ? [categoryFromUrl] : [],
+    }));
+  }, [categoryFromUrl]);
 
   const filteredProducts = products.filter((product) => {
     if (
@@ -82,7 +101,7 @@ function Products() {
               <Grid container spacing={3}>
                 {filteredProducts.map((product) => (
                   <Grid key={product.id} size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
-                    <ProductCard product={product} onAddToCart={addToCart} />
+                    <ProductCard product={product} onAddToCart={handleAddToCart} />
                   </Grid>
                 ))}
               </Grid>
