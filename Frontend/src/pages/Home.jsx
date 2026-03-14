@@ -17,6 +17,7 @@ import {
   WaterDrop,
 } from "@mui/icons-material";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useProducts } from "../context/ProductsContext";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
@@ -412,6 +413,7 @@ function Home() {
           ))
         )}
       </Box>
+      <Footer />
     </Box>
   );
 }

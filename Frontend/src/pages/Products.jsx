@@ -4,6 +4,7 @@ import { Box, Grid, Typography, CircularProgress, Alert } from "@mui/material";
 import Header from "../components/Header";
 import FilterSidebar from "../components/FilterSidebar";
 import ProductCard from "../components/ProductCard";
+import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { useAuth } from "../context/AuthContext";
@@ -62,7 +63,7 @@ function Products() {
   });
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column" }}>
       <Header showSearch searchValue={search} onSearchChange={setSearch} />
 
       <Box sx={{ display: "flex" }}>
@@ -117,6 +118,7 @@ function Products() {
           )}
         </Box>
       </Box>
+      <Footer />
     </Box>
   );
 }

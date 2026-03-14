@@ -6,8 +6,9 @@ import {
   Typography,
   Button,
   Box,
+  Chip,
 } from "@mui/material";
-import { AddShoppingCart } from "@mui/icons-material";
+import { AddShoppingCart, EnergySavingsLeaf } from "@mui/icons-material";
 
 function ProductCard({ product, onAddToCart }) {
   return (
@@ -21,11 +22,11 @@ function ProductCard({ product, onAddToCart }) {
         transition: "transform 0.2s, box-shadow 0.2s",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: "0 8px 24px rgba(46, 125, 50, 0.15)",
+          boxShadow: "0 8px 24px rgba(46, 125, 50, 0.18)",
         },
       }}
     >
-      {/* Product Image Placeholder */}
+      {/* Image area */}
       <Box
         component={RouterLink}
         to={`/products/${product.id}`}
@@ -39,44 +40,71 @@ function ProductCard({ product, onAddToCart }) {
           borderRadius: "12px 12px 0 0",
           textDecoration: "none",
           cursor: "pointer",
+          overflow: "hidden",
         }}
       >
-        <Typography sx={{ fontSize: 64, filter: "grayscale(0)" }}>
-          {product.emoji}
-        </Typography>
+        <Typography sx={{ fontSize: 64 }}>{product.emoji}</Typography>
+
+        {/* Category badge */}
+        <Chip
+          icon={<EnergySavingsLeaf sx={{ fontSize: "14px !important", color: "#fff !important" }} />}
+          label={product.category}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            bgcolor: "rgba(27,94,32,0.85)",
+            color: "#fff",
+            fontSize: "0.68rem",
+            fontWeight: 600,
+            height: 22,
+            backdropFilter: "blur(4px)",
+          }}
+        />
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-        <Typography variant="caption" color="text.secondary" fontWeight={500}>
-          {product.category}
-        </Typography>
+      <CardContent sx={{ flexGrow: 1, pb: 1, pt: 1.5 }}>
         <Typography
           component={RouterLink}
           to={`/products/${product.id}`}
-          variant="h6"
+          variant="subtitle1"
           fontWeight={600}
           sx={{
-            mt: 0.5,
-            lineHeight: 1.3,
             display: "block",
             textDecoration: "none",
             color: "text.primary",
+            lineHeight: 1.3,
+            mb: 0.5,
             "&:hover": { color: "primary.main" },
           }}
         >
           {product.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            lineHeight: 1.5,
+          }}
+        >
           {product.description}
         </Typography>
       </CardContent>
 
-      <CardActions
-        sx={{ px: 2, pb: 2, pt: 0, justifyContent: "space-between" }}
-      >
-        <Typography variant="h6" fontWeight={700} color="primary.dark">
-          L.{product.price.toFixed(2)}
-        </Typography>
+      <CardActions sx={{ px: 2, pb: 2, pt: 0, justifyContent: "space-between", alignItems: "center" }}>
+        <Box>
+          <Typography variant="caption" color="text.disabled" sx={{ display: "block", lineHeight: 1 }}>
+            Precio
+          </Typography>
+          <Typography variant="h6" fontWeight={700} color="primary.dark" sx={{ lineHeight: 1.2 }}>
+            L.{product.price.toFixed(2)}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           size="small"
@@ -85,6 +113,7 @@ function ProductCard({ product, onAddToCart }) {
           sx={{
             borderRadius: 2,
             boxShadow: "0 2px 8px rgba(46, 125, 50, 0.25)",
+            "&:hover": { boxShadow: "0 4px 12px rgba(46, 125, 50, 0.35)" },
           }}
         >
           Agregar
