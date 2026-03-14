@@ -11,3 +11,18 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# .NET
+[Bb]in/
+[Oo]bj/
+
+# IDEs (Rider / VS Code / Visual Studio)
+.idea/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Copilot / Archivos temporales de IA
+copilot.data.migration.*
+*.xml
