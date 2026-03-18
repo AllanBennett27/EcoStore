@@ -56,6 +56,7 @@ function ProductForm() {
     if (isEdit) {
       const product = products.find((p) => p.id === Number(id));
       if (product) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setForm({
           name: product.name,
           description: product.description,

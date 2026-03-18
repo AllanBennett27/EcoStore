@@ -12,6 +12,8 @@ import Profile from "./pages/Profile";
 import AdminProducts from "./pages/admin/AdminProducts";
 import ProductForm from "./pages/admin/ProductForm";
 import AdminReports from "./pages/admin/AdminReports";
+import RoleManagement from "./pages/admin/RoleManagement";
+import AdminGuard from "./components/AdminGuard";
 
 function AuthSnackbar() {
   const { notification, closeNotification } = useAuth();
@@ -47,13 +49,14 @@ function App() {
               <Route path="/products/:id" element={<ProductDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/admin/products" element={<AdminProducts />} />
-              <Route path="/admin/products/new" element={<ProductForm />} />
+              <Route path="/admin/products" element={<AdminGuard><AdminProducts /></AdminGuard>} />
+              <Route path="/admin/products/new" element={<AdminGuard><ProductForm /></AdminGuard>} />
               <Route
                 path="/admin/products/edit/:id"
-                element={<ProductForm />}
+                element={<AdminGuard><ProductForm /></AdminGuard>}
               />
-              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/reports" element={<AdminGuard><AdminReports /></AdminGuard>} />
+              <Route path="/admin/roles" element={<AdminGuard><RoleManagement /></AdminGuard>} />
             </Routes>
             <AuthSnackbar />
           </CartProvider>

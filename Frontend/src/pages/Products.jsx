@@ -33,6 +33,7 @@ function Products() {
 
   // Sync URL category param whenever it changes (e.g. clicking "Ver más" from Home)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilters((prev) => ({
       ...prev,
       categories: categoryFromUrl ? [categoryFromUrl] : [],

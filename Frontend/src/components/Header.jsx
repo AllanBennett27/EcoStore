@@ -22,6 +22,7 @@ import {
   Person,
   Inventory,
   Assessment,
+  ManageAccounts,
 } from "@mui/icons-material";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -168,6 +169,14 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                       <Assessment fontSize="small" color="primary" />
                     </ListItemIcon>
                     Reportes
+                  </MenuItem>
+                )}
+                {isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/roles"); }}>
+                    <ListItemIcon>
+                      <ManageAccounts fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    Gestión de Roles
                   </MenuItem>
                 )}
                 <Divider />

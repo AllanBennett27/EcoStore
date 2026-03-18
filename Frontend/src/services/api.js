@@ -26,4 +26,11 @@ export const authService = {
   register: (data) => api.post('/api/auth/registrar', data),
 };
 
+export const carritoService = {
+  agregar: (productoId, cantidad, precio) =>
+    api.post('/api/carrito/agregar', { productoId, cantidad, precio }),
+  eliminar: (productoId) =>
+    api.delete(`/api/carrito/eliminar/${productoId}`),
+};
+
 export default api;

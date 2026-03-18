@@ -1,7 +1,9 @@
 import { createContext, useContext, useState } from 'react';
+import { carritoService } from '../services/api';
 
 const CartContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCart() {
   return useContext(CartContext);
 }
@@ -9,10 +11,22 @@ export function useCart() {
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
+    // Calcula la nueva cantidad antes de llamar al endpoint
+    const existing = cartItems.find((item) => item.product.id === product.id);
+    const newQuantity = existing ? existing.quantity + 1 : 1;
+
+    try {
+      await carritoService.agregar(product.id, newQuantity, product.price);
+    } catch (err) {
+      console.error('Error al agregar al carrito:', err);
+      // Si falla el servidor, no actualizamos el estado local
+      return;
+    }
+
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
+      const ex = prev.find((item) => item.product.id === product.id);
+      if (ex) {
         return prev.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -23,23 +37,47 @@ export function CartProvider({ children }) {
     });
   };
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = async (productId) => {
+    try {
+      await carritoService.eliminar(productId);
+    } catch (err) {
+      console.error('Error al eliminar del carrito:', err);
+      return;
+    }
     setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = async (productId, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      await removeFromCart(productId);
       return;
     }
+
+    const item = cartItems.find((i) => i.product.id === productId);
+    if (!item) return;
+
+    try {
+      await carritoService.agregar(productId, quantity, item.product.price);
+    } catch (err) {
+      console.error('Error al actualizar cantidad:', err);
+      return;
+    }
+
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+      prev.map((i) =>
+        i.product.id === productId ? { ...i, quantity } : i
       )
     );
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    for (const item of cartItems) {
+      try {
+        await carritoService.eliminar(item.product.id);
+      } catch (err) {
+        console.error('Error al vaciar carrito:', err);
+      }
+    }
     setCartItems([]);
   };
 

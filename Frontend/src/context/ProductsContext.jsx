@@ -3,6 +3,7 @@ import { productosService } from '../services/api';
 
 const ProductsContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useProducts() {
   return useContext(ProductsContext);
 }
