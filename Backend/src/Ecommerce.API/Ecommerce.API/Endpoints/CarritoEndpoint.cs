@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http; 
 using Ecommerce.API.Hubs;
 using Ecommerce.Application.DTOs;
 using Ecommerce.Domain.Interfaces;

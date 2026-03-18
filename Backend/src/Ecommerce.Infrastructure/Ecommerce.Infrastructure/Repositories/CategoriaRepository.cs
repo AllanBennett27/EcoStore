@@ -1,4 +1,5 @@
 using Ecommerce.Application.DTOs;
+using Ecommerce.Domain.DTOs;
 using Ecommerce.Domain.Interfaces;
 using Ecommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,7 @@ public class CategoriaRepository : ICategoriaRepository
             {
                 IdCategoria = p.IdCategoria,
                 NombreCategoria = p.NombreCategoria,
-                Descripcion = p.Descripcion,
+                Descripcion = p.Descripcion ?? string.Empty,
                 Estado = p.Estado,
             })
             .ToListAsync();

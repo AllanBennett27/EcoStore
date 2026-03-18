@@ -33,4 +33,18 @@ export const carritoService = {
     api.delete(`/api/carrito/eliminar/${productoId}`),
 };
 
+export const ventasService = {
+  getPedidos:       ()              => api.get('/api/ventas/pedidos'),
+  getDetallePedido: (id)            => api.get(`/api/ventas/pedidos/${id}/detalle`),
+  getStock:         ()              => api.get('/api/ventas/stock'),
+  updateEstado:     (id, estado)    => api.put(`/api/ventas/pedidos/${id}/estado`, { nuevoEstado: estado }),
+};
+
+export const finanzasService = {
+  getFacturas:     ()  => api.get('/api/finanzas/facturas'),
+  getFacturaById:  (id) => api.get(`/api/finanzas/facturas/${id}`),
+  getIngresosMes:  ()  => api.get('/api/finanzas/ingresos/mes'),
+  getTopProductos: ()  => api.get('/api/finanzas/productos/top'),
+};
+
 export default api;

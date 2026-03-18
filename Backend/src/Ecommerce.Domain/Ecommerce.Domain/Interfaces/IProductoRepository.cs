@@ -1,6 +1,7 @@
 
 
 using Ecommerce.Application.DTOs;
+using Ecommerce.Domain.DTOs;
 
 namespace Ecommerce.Domain.Interfaces;
 

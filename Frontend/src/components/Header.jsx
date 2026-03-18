@@ -23,6 +23,8 @@ import {
   Inventory,
   Assessment,
   ManageAccounts,
+  PointOfSale,
+  AccountBalance,
 } from "@mui/icons-material";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -177,6 +179,40 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                       <ManageAccounts fontSize="small" color="primary" />
                     </ListItemIcon>
                     Gestión de Roles
+                  </MenuItem>
+                )}
+                {isAdmin && <Divider />}
+                {isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/pedidos"); }}>
+                    <ListItemIcon>
+                      <PointOfSale fontSize="small" color="success" />
+                    </ListItemIcon>
+                    Gestión de Pedidos
+                  </MenuItem>
+                )}
+                {isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/stock"); }}>
+                    <ListItemIcon>
+                      <Inventory fontSize="small" color="success" />
+                    </ListItemIcon>
+                    Stock de Productos
+                  </MenuItem>
+                )}
+                {isAdmin && <Divider />}
+                {isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/finanzas/facturas"); }}>
+                    <ListItemIcon>
+                      <AccountBalance fontSize="small" color="warning" />
+                    </ListItemIcon>
+                    Facturas
+                  </MenuItem>
+                )}
+                {isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/finanzas/reportes"); }}>
+                    <ListItemIcon>
+                      <Assessment fontSize="small" color="warning" />
+                    </ListItemIcon>
+                    Reportes Financieros
                   </MenuItem>
                 )}
                 <Divider />

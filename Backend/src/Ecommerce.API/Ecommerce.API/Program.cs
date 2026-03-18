@@ -90,6 +90,7 @@ app.MapProductoEndpoints();
 app.MapCategoriaEndpoints();
 app.MapAuthEndpoints();
 app.MapCarritoEndpoints();
+app.MapUsuarioEndpoints();
 app.Run();
 
 

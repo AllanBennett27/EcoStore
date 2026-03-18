@@ -14,6 +14,12 @@ import ProductForm from "./pages/admin/ProductForm";
 import AdminReports from "./pages/admin/AdminReports";
 import RoleManagement from "./pages/admin/RoleManagement";
 import AdminGuard from "./components/AdminGuard";
+import VentasDashboard from "./pages/ventas/VentasDashboard";
+import VentasPedidos from "./pages/ventas/VentasPedidos";
+import VentasStock from "./pages/ventas/VentasStock";
+import FinanzasDashboard from "./pages/finanzas/FinanzasDashboard";
+import FinanzasFacturas from "./pages/finanzas/FinanzasFacturas";
+import FinanzasReportes from "./pages/finanzas/FinanzasReportes";
 
 function AuthSnackbar() {
   const { notification, closeNotification } = useAuth();
@@ -57,6 +63,12 @@ function App() {
               />
               <Route path="/admin/reports" element={<AdminGuard><AdminReports /></AdminGuard>} />
               <Route path="/admin/roles" element={<AdminGuard><RoleManagement /></AdminGuard>} />
+              <Route path="/ventas" element={<VentasDashboard />} />
+              <Route path="/ventas/pedidos" element={<VentasPedidos />} />
+              <Route path="/ventas/stock" element={<VentasStock />} />
+              <Route path="/finanzas" element={<FinanzasDashboard />} />
+              <Route path="/finanzas/facturas" element={<FinanzasFacturas />} />
+              <Route path="/finanzas/reportes" element={<FinanzasReportes />} />
             </Routes>
             <AuthSnackbar />
           </CartProvider>

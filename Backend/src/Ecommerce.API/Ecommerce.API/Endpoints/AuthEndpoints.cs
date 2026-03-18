@@ -1,5 +1,5 @@
-using Ecommerce.Application.DTOs;
 using Ecommerce.Application.Services;
+using Ecommerce.Domain.DTOs;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Domain.Interfaces;
 

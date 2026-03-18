@@ -1,4 +1,4 @@
-namespace Ecommerce.Application.DTOs;
+namespace Ecommerce.Domain.DTOs;
 
 public class AuthDto
 {
