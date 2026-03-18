@@ -12,11 +12,13 @@ import {
   TableRow,
   Paper,
 } from '@mui/material';
+import { useEffect } from 'react';
 import {
   Inventory,
   Category,
   AttachMoney,
   TrendingUp,
+  Image as ImageIcon,
 } from '@mui/icons-material';
 import Header from '../../components/Header';
 import { useProducts } from '../../context/ProductsContext';
@@ -52,7 +54,11 @@ function StatCard({ icon, title, value, color }) {
 }
 
 function AdminReports() {
-  const { products } = useProducts();
+  const { adminProducts: products, loadAdminProducts } = useProducts();
+
+  useEffect(() => {
+    loadAdminProducts().catch(() => {});
+  }, []);
 
   const totalProducts = products.length;
   const categoriesMap = {};
@@ -159,7 +165,7 @@ function AdminReports() {
                       <TableRow key={p.id}>
                         <TableCell sx={{ border: 0, pl: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography sx={{ fontSize: 18 }}>{p.emoji}</Typography>
+                            <ImageIcon sx={{ fontSize: 18, color: 'primary.main' }} />
                             <Typography variant="body2" noWrap sx={{ maxWidth: 120 }}>
                               {p.name}
                             </Typography>
@@ -191,7 +197,7 @@ function AdminReports() {
                       <TableRow key={p.id}>
                         <TableCell sx={{ border: 0, pl: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography sx={{ fontSize: 18 }}>{p.emoji}</Typography>
+                            <ImageIcon sx={{ fontSize: 18, color: 'primary.main' }} />
                             <Typography variant="body2" noWrap sx={{ maxWidth: 120 }}>
                               {p.name}
                             </Typography>

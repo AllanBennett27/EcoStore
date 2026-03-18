@@ -15,6 +15,7 @@ import {
   VolunteerActivism,
   Park,
   WaterDrop,
+  Image as ImageIcon,
 } from "@mui/icons-material";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -166,14 +167,24 @@ function ProductCard({ product, onClick }) {
       <CardActionArea onClick={onClick}>
         <Box
           sx={{
-            bgcolor: product.color,
+            bgcolor: "#f1f8e9",
             height: 200,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            overflow: "hidden",
           }}
         >
-          <Typography sx={{ fontSize: 72 }}>{product.emoji}</Typography>
+          {product.imageUrl ? (
+            <Box
+              component="img"
+              src={product.imageUrl}
+              alt={product.name}
+              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <ImageIcon sx={{ fontSize: 72, color: "primary.main" }} />
+          )}
         </Box>
         <Box sx={{ p: 1.5, textAlign: "center" }}>
           <Typography variant="body2" fontWeight={600} noWrap>

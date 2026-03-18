@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   Grid,
   Card,
   CardActionArea,
+  CircularProgress,
 } from "@mui/material";
 import {
   AddShoppingCart,
@@ -22,6 +23,7 @@ import {
   Recycling,
   VerifiedUser,
   LocalShipping,
+  Image as ImageIcon,
 } from "@mui/icons-material";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -56,21 +58,31 @@ function RelatedCard({ product, navigate }) {
       <CardActionArea onClick={() => navigate(`/products/${product.id}`)}>
         <Box
           sx={{
-            bgcolor: product.color,
+            bgcolor: "#f1f8e9",
             height: 130,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            overflow: "hidden",
           }}
         >
-          <Typography sx={{ fontSize: 52 }}>{product.emoji}</Typography>
+          {product.imageUrl ? (
+            <Box
+              component="img"
+              src={product.imageUrl}
+              alt={product.name}
+              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <ImageIcon sx={{ fontSize: 52, color: "primary.main" }} />
+          )}
         </Box>
         <Box sx={{ p: 1.5 }}>
           <Typography variant="body2" fontWeight={600} noWrap>
             {product.name}
           </Typography>
           <Typography variant="body2" color="primary.dark" fontWeight={700}>
-            L.{product.price?.toFixed(2)}
+            L.{Number(product.price).toFixed(2)}
           </Typography>
         </Box>
       </CardActionArea>
@@ -82,17 +94,35 @@ function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { products } = useProducts();
+  const { products, getProductById } = useProducts();
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const product = products.find((p) => p.id === Number(id));
+  useEffect(() => {
+    setLoading(true);
+    getProductById(Number(id))
+      .then((data) => setProduct(data))
+      .catch(() => setProduct(null))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const related = product
-    ? products
-        .filter((p) => p.category === product.category && p.id !== product.id)
-        .slice(0, 4)
+    ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
     : [];
+
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+        <Header />
+        <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
+          <CircularProgress />
+        </Box>
+        <Footer />
+      </Box>
+    );
+  }
 
   if (!product) {
     return (
@@ -116,7 +146,7 @@ function ProductDetail() {
       navigate("/auth");
       return;
     }
-    for (let i = 0; i < quantity; i++) {
+    for (let i = 0; i < quantity; i += 1) {
       addToCart(product);
     }
     setQuantity(1);
@@ -128,7 +158,6 @@ function ProductDetail() {
 
       <Box sx={{ flex: 1 }}>
         <Box sx={{ maxWidth: 1100, mx: "auto", p: 3 }}>
-          {/* Breadcrumbs */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
             <Button component={RouterLink} to="/products" startIcon={<ArrowBack />} size="small">
               Volver
@@ -144,13 +173,11 @@ function ProductDetail() {
             </Breadcrumbs>
           </Box>
 
-          {/* Main content */}
           <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 4 }}>
-            {/* Image panel */}
             <Box sx={{ flex: 1 }}>
               <Box
                 sx={{
-                  bgcolor: product.color,
+                  bgcolor: "#f1f8e9",
                   borderRadius: 4,
                   display: "flex",
                   alignItems: "center",
@@ -161,7 +188,6 @@ function ProductDetail() {
                   boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
                 }}
               >
-                {/* Decorative circle */}
                 <Box
                   sx={{
                     position: "absolute",
@@ -171,18 +197,31 @@ function ProductDetail() {
                     bgcolor: "rgba(255,255,255,0.15)",
                   }}
                 />
-                <Typography sx={{ fontSize: 140, zIndex: 1, filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.15))" }}>
-                  {product.emoji}
-                </Typography>
+                {product.imageUrl ? (
+                  <Box
+                    component="img"
+                    src={product.imageUrl}
+                    alt={product.name}
+                    sx={{ width: "100%", height: "100%", objectFit: "cover", zIndex: 1 }}
+                  />
+                ) : (
+                  <ImageIcon
+                    sx={{
+                      fontSize: 140,
+                      zIndex: 1,
+                      color: "primary.main",
+                      filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.15))",
+                    }}
+                  />
+                )}
               </Box>
 
-              {/* Eco badges below image */}
               <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
-                {ecoBadges.map((b) => (
+                {ecoBadges.map((badge) => (
                   <Chip
-                    key={b.label}
-                    icon={b.icon}
-                    label={b.label}
+                    key={badge.label}
+                    icon={badge.icon}
+                    label={badge.label}
                     size="small"
                     sx={{
                       bgcolor: "#e8f5e9",
@@ -195,7 +234,6 @@ function ProductDetail() {
               </Box>
             </Box>
 
-            {/* Info panel */}
             <Box sx={{ flex: 1 }}>
               <Chip
                 label={product.category}
@@ -207,7 +245,7 @@ function ProductDetail() {
               </Typography>
 
               <Typography variant="h3" fontWeight={800} color="primary.dark" sx={{ mt: 2 }}>
-                L.{product.price.toFixed(2)}
+                L.{Number(product.price).toFixed(2)}
               </Typography>
 
               <Divider sx={{ my: 2.5 }} />
@@ -221,13 +259,12 @@ function ProductDetail() {
 
               <Divider sx={{ my: 2.5 }} />
 
-              {/* Features */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2.5 }}>
-                {features.map((f) => (
-                  <Box key={f.text} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    {f.icon}
+                {features.map((feature) => (
+                  <Box key={feature.text} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    {feature.icon}
                     <Typography variant="body2" color="text.secondary">
-                      {f.text}
+                      {feature.text}
                     </Typography>
                   </Box>
                 ))}
@@ -235,7 +272,6 @@ function ProductDetail() {
 
               <Divider sx={{ mb: 2.5 }} />
 
-              {/* Quantity */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Cantidad:
@@ -275,12 +311,11 @@ function ProductDetail() {
                   "&:hover": { boxShadow: "0 6px 20px rgba(46, 125, 50, 0.4)" },
                 }}
               >
-                Agregar al carrito — L.{(product.price * quantity).toFixed(2)}
+                Agregar al carrito - L.{(Number(product.price) * quantity).toFixed(2)}
               </Button>
             </Box>
           </Box>
 
-          {/* Related products */}
           {related.length > 0 && (
             <Box sx={{ mt: 7 }}>
               <Typography variant="h5" fontWeight={700} color="primary.dark" gutterBottom>
@@ -288,9 +323,9 @@ function ProductDetail() {
               </Typography>
               <Divider sx={{ mb: 3 }} />
               <Grid container spacing={2}>
-                {related.map((p) => (
-                  <Grid key={p.id} size={{ xs: 6, sm: 4, md: 3 }}>
-                    <RelatedCard product={p} navigate={navigate} />
+                {related.map((item) => (
+                  <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3 }}>
+                    <RelatedCard product={item} navigate={navigate} />
                   </Grid>
                 ))}
               </Grid>

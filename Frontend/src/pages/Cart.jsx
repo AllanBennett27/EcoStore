@@ -17,6 +17,7 @@ import {
   ArrowBack,
   RemoveShoppingCart,
   Lock,
+  Image as ImageIcon,
 } from "@mui/icons-material";
 import Header from "../components/Header";
 import { useCart } from "../context/CartContext";
@@ -165,17 +166,25 @@ function Cart() {
                       width: 80,
                       height: 80,
                       minWidth: 80,
-                      bgcolor: product.color,
+                      bgcolor: "#f1f8e9",
                       borderRadius: 2,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       textDecoration: "none",
+                      overflow: "hidden",
                     }}
                   >
-                    <Typography sx={{ fontSize: 40 }}>
-                      {product.emoji}
-                    </Typography>
+                    {product.imageUrl ? (
+                      <Box
+                        component="img"
+                        src={product.imageUrl}
+                        alt={product.name}
+                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <ImageIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                    )}
                   </Box>
 
                   {/* Product Info */}
@@ -201,7 +210,7 @@ function Cart() {
                       color="primary.main"
                       fontWeight={500}
                     >
-                      L.{product.price.toFixed(2)} c/u
+                      L.{Number(product.price).toFixed(2)} c/u
                     </Typography>
                   </Box>
 
@@ -246,7 +255,7 @@ function Cart() {
                     color="primary.dark"
                     sx={{ minWidth: 90, textAlign: "right" }}
                   >
-                    L.{(product.price * quantity).toFixed(2)}
+                    L.{(Number(product.price) * quantity).toFixed(2)}
                   </Typography>
 
                   {/* Remove */}

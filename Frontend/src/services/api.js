@@ -15,6 +15,12 @@ api.interceptors.request.use((config) => {
 
 export const productosService = {
   getAll: () => api.get('/api/productos'),
+  getActive: () => api.get('/api/productos/activos'),
+  getById: (id) => api.get(`/api/productos/${id}`),
+  create: (data) => api.post('/api/productos', data),
+  update: (id, data) => api.put(`/api/productos/${id}`, data),
+  hide: (id) => api.patch(`/api/productos/${id}/ocultar`),
+  activate: (id) => api.patch(`/api/productos/${id}/activar`),
 };
 
 export const categoriasService = {

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { productosService } from '../services/api';
 
 const ProductsContext = createContext();
@@ -8,52 +8,125 @@ export function useProducts() {
   return useContext(ProductsContext);
 }
 
-function mapProducto(p) {
+function mapProducto(producto) {
   return {
-    id: p.idProducto,
-    name: p.nombre,
-    description: p.descripcion || '',
-    price: p.precio,
-    category: p.nombreCategoria || 'Sin categoría',
-    imagenUrl: p.imagenUrl || null,
-    emoji: '📦',
-    color: '#e8f5e9',
+    id: producto.idProducto,
+    name: producto.nombre,
+    description: producto.descripcion || '',
+    price: producto.precio,
+    category: producto.nombreCategoria || 'Sin categoria',
+    categoryId: producto.idCategoria,
+    imageUrl: producto.imagenUrl || '',
+    status: producto.estado || 'Activo',
   };
 }
 
 export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
+  const [adminProducts, setAdminProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await productosService.getActive();
+      setProducts(res.data.map(mapProducto));
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAdminProducts = async () => {
+    setAdminLoading(true);
+    try {
+      const res = await productosService.getAll();
+      setAdminProducts(res.data.map(mapProducto));
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
   useEffect(() => {
-    productosService
-      .getAll()
-      .then((res) => setProducts(res.data.map(mapProducto)))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    loadProducts();
   }, []);
 
-  const addProduct = (product) => {
-    const maxId = products.reduce((max, p) => Math.max(max, p.id), 0);
-    const newProduct = { ...product, id: maxId + 1 };
-    setProducts((prev) => [...prev, newProduct]);
-    return newProduct;
+  const refreshProducts = async () => {
+    await Promise.all([loadProducts(), loadAdminProducts()]);
   };
 
-  const updateProduct = (id, data) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...data } : p))
-    );
+  const getProductById = async (id) => {
+    const res = await productosService.getById(id);
+    return mapProducto(res.data);
   };
 
-  const deleteProduct = (id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  const addProduct = async (data) => {
+    setSaving(true);
+    try {
+      const res = await productosService.create(data);
+      await refreshProducts();
+      return mapProducto(res.data);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateProduct = async (id, data) => {
+    setSaving(true);
+    try {
+      await productosService.update(id, data);
+      await refreshProducts();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hideProduct = async (id) => {
+    setSaving(true);
+    try {
+      await productosService.hide(id);
+      await refreshProducts();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const activateProduct = async (id) => {
+    setSaving(true);
+    try {
+      await productosService.activate(id);
+      await refreshProducts();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <ProductsContext.Provider
-      value={{ products, loading, error, addProduct, updateProduct, deleteProduct }}
+      value={{
+        products,
+        adminProducts,
+        loading,
+        adminLoading,
+        saving,
+        error,
+        loadProducts,
+        loadAdminProducts,
+        getProductById,
+        addProduct,
+        updateProduct,
+        hideProduct,
+        activateProduct,
+      }}
     >
       {children}
     </ProductsContext.Provider>

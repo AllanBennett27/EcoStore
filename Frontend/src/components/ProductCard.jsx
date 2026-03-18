@@ -7,8 +7,9 @@ import {
   Button,
   Box,
   Chip,
+  CardMedia,
 } from "@mui/material";
-import { AddShoppingCart, EnergySavingsLeaf } from "@mui/icons-material";
+import { AddShoppingCart, EnergySavingsLeaf, Image as ImageIcon } from "@mui/icons-material";
 
 function ProductCard({ product, onAddToCart }) {
   return (
@@ -26,13 +27,12 @@ function ProductCard({ product, onAddToCart }) {
         },
       }}
     >
-      {/* Image area */}
       <Box
         component={RouterLink}
         to={`/products/${product.id}`}
         sx={{
           height: 200,
-          bgcolor: product.color || "primary.light",
+          bgcolor: "#f1f8e9",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -43,9 +43,17 @@ function ProductCard({ product, onAddToCart }) {
           overflow: "hidden",
         }}
       >
-        <Typography sx={{ fontSize: 64 }}>{product.emoji}</Typography>
+        {product.imageUrl ? (
+          <CardMedia
+            component="img"
+            image={product.imageUrl}
+            alt={product.name}
+            sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <ImageIcon sx={{ fontSize: 64, color: "primary.main" }} />
+        )}
 
-        {/* Category badge */}
         <Chip
           icon={<EnergySavingsLeaf sx={{ fontSize: "14px !important", color: "#fff !important" }} />}
           label={product.category}
@@ -102,7 +110,7 @@ function ProductCard({ product, onAddToCart }) {
             Precio
           </Typography>
           <Typography variant="h6" fontWeight={700} color="primary.dark" sx={{ lineHeight: 1.2 }}>
-            L.{product.price.toFixed(2)}
+            L.{Number(product.price).toFixed(2)}
           </Typography>
         </Box>
         <Button

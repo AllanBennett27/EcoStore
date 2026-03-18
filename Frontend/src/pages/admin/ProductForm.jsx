@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -9,86 +9,86 @@ import {
   Card,
   CardContent,
   Grid,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
-import { Save, ArrowBack } from '@mui/icons-material';
+import { Save, ArrowBack, Image as ImageIcon } from '@mui/icons-material';
 import Header from '../../components/Header';
 import { useProducts } from '../../context/ProductsContext';
-
-const categories = [
-  'Alimentos Organicos',
-  'Cuidado Personal',
-  'Hogar Ecologico',
-  'Bebidas Naturales',
-  'Ropa Sostenible',
-  'Jardineria',
-];
-
-const colorOptions = [
-  { label: 'Verde claro', value: '#e8f5e9' },
-  { label: 'Amarillo claro', value: '#fff8e1' },
-  { label: 'Naranja claro', value: '#fff3e0' },
-  { label: 'Morado claro', value: '#f3e5f5' },
-  { label: 'Azul claro', value: '#e3f2fd' },
-  { label: 'Verde menta', value: '#e0f2f1' },
-  { label: 'Verde lima', value: '#f1f8e9' },
-  { label: 'Cafe claro', value: '#efebe9' },
-];
+import { categoriasService } from '../../services/api';
 
 const emptyForm = {
   name: '',
   description: '',
-  fullDescription: '',
   price: '',
-  category: '',
-  emoji: '',
-  color: '#e8f5e9',
+  imageUrl: '',
+  categoryId: '',
 };
 
 function ProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, addProduct, updateProduct } = useProducts();
+  const { addProduct, updateProduct, getProductById, saving } = useProducts();
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState(emptyForm);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(isEdit);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isEdit) {
-      const product = products.find((p) => p.id === Number(id));
-      if (product) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+    categoriasService
+      .getAll()
+      .then((res) => setCategories(res.data))
+      .catch(() => setError('No se pudieron cargar las categorias.'));
+  }, []);
+
+  useEffect(() => {
+    if (!isEdit) {
+      setLoading(false);
+      return;
+    }
+
+    getProductById(Number(id))
+      .then((product) => {
         setForm({
           name: product.name,
           description: product.description,
-          fullDescription: product.fullDescription || '',
           price: String(product.price),
-          category: product.category,
-          emoji: product.emoji,
-          color: product.color || '#e8f5e9',
+          imageUrl: product.imageUrl || '',
+          categoryId: String(product.categoryId),
         });
-      }
-    }
-  }, [id, isEdit, products]);
+        setError(null);
+      })
+      .catch(() => setError('No se pudo cargar el producto.'))
+      .finally(() => setLoading(false));
+  }, [id, isEdit]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const productData = {
-      ...form,
-      price: parseFloat(form.price) || 0,
-      rating: 0,
-      reviews: 0,
+
+    const payload = {
+      nombre: form.name.trim(),
+      descripcion: form.description.trim(),
+      precio: Number(form.price) || 0,
+      imagenUrl: form.imageUrl.trim(),
+      idCategoria: Number(form.categoryId),
     };
 
-    if (isEdit) {
-      updateProduct(Number(id), productData);
-    } else {
-      addProduct(productData);
+    try {
+      if (isEdit) {
+        await updateProduct(Number(id), payload);
+      } else {
+        await addProduct(payload);
+      }
+      navigate('/admin/products');
+    } catch {
+      setError('No se pudo guardar el producto.');
     }
-    navigate('/admin/products');
   };
 
   return (
@@ -112,162 +112,132 @@ function ProductForm() {
 
         <Card elevation={2} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 4 }}>
-            <Box component="form" onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Nombre del producto"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </Grid>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <Box component="form" onSubmit={handleSubmit}>
+                {error && (
+                  <Alert severity="error" sx={{ mb: 3 }}>
+                    {error}
+                  </Alert>
+                )}
 
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Descripcion corta"
-                    name="description"
-                    value={form.description}
-                    onChange={handleChange}
-                    required
-                  />
-                </Grid>
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
+                      fullWidth
+                      label="Nombre del producto"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </Grid>
 
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Descripcion completa"
-                    name="fullDescription"
-                    value={form.fullDescription}
-                    onChange={handleChange}
-                    multiline
-                    rows={4}
-                    required
-                  />
-                </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
+                      fullWidth
+                      label="Descripcion"
+                      name="description"
+                      value={form.description}
+                      onChange={handleChange}
+                      multiline
+                      rows={3}
+                      required
+                    />
+                  </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Precio (L)"
-                    name="price"
-                    type="number"
-                    value={form.price}
-                    onChange={handleChange}
-                    required
-                    inputProps={{ min: 0, step: '0.01' }}
-                  />
-                </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      fullWidth
+                      label="Precio (L)"
+                      name="price"
+                      type="number"
+                      value={form.price}
+                      onChange={handleChange}
+                      required
+                      inputProps={{ min: 0, step: '0.01' }}
+                    />
+                  </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="Categoria"
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    required
-                  >
-                    {categories.map((cat) => (
-                      <MenuItem key={cat} value={cat}>
-                        {cat}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Categoria"
+                      name="categoryId"
+                      value={form.categoryId}
+                      onChange={handleChange}
+                      required
+                    >
+                      {categories.map((cat) => (
+                        <MenuItem key={cat.idCategoria} value={String(cat.idCategoria)}>
+                          {cat.nombreCategoria}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Emoji del producto"
-                    name="emoji"
-                    value={form.emoji}
-                    onChange={handleChange}
-                    required
-                    helperText="Ejemplo: 🍯 🧼 🌱"
-                  />
-                </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
+                      fullWidth
+                      label="URL de imagen"
+                      name="imageUrl"
+                      value={form.imageUrl}
+                      onChange={handleChange}
+                      placeholder="https://..."
+                      required
+                    />
+                  </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="Color de fondo"
-                    name="color"
-                    value={form.color}
-                    onChange={handleChange}
-                    required
-                  >
-                    {colorOptions.map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box
-                            sx={{
-                              width: 20,
-                              height: 20,
-                              bgcolor: opt.value,
-                              borderRadius: 1,
-                              border: '1px solid',
-                              borderColor: 'divider',
-                            }}
-                          />
-                          {opt.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-
-                {/* Preview */}
-                {form.emoji && (
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
                       Vista previa
                     </Typography>
                     <Box
                       sx={{
-                        bgcolor: form.color,
+                        bgcolor: '#f1f8e9',
                         borderRadius: 3,
-                        height: 120,
+                        minHeight: 220,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        overflow: 'hidden',
                       }}
                     >
-                      <Typography sx={{ fontSize: 64 }}>{form.emoji}</Typography>
+                      {form.imageUrl ? (
+                        <Box
+                          component="img"
+                          src={form.imageUrl}
+                          alt={form.name || 'Vista previa'}
+                          sx={{ width: '100%', height: 220, objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <ImageIcon sx={{ fontSize: 72, color: 'primary.main' }} />
+                      )}
                     </Box>
                   </Grid>
-                )}
 
-                <Grid size={{ xs: 12 }}>
-                  <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <Button
-                      component={RouterLink}
-                      to="/admin/products"
-                      variant="outlined"
-                      sx={{ borderRadius: 2 }}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<Save />}
-                      sx={{
-                        borderRadius: 2,
-                        boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
-                      }}
-                    >
-                      {isEdit ? 'Guardar cambios' : 'Crear producto'}
-                    </Button>
-                  </Box>
+                  <Grid size={{ xs: 12 }}>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                      <Button component={RouterLink} to="/admin/products" variant="outlined">
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        startIcon={<Save />}
+                        disabled={saving}
+                      >
+                        {saving ? 'Guardando...' : 'Guardar'}
+                      </Button>
+                    </Box>
+                  </Grid>
                 </Grid>
-              </Grid>
-            </Box>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Box>
