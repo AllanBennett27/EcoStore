@@ -105,10 +105,8 @@ function Checkout() {
   // Estado pedido
   const [loading, setLoading]       = useState(false);
   const [pedido, setPedido]         = useState(null);
-  const [stockAviso, setStockAviso]   = useState(false);
-  const [precioAviso, setPrecioAviso] = useState(false);
-  const [ocultadoAviso, setOcultadoAviso] = useState(false);
-  const connectionRef               = useRef(null);
+  const [stockAviso, setStockAviso] = useState(false);
+  const connectionRef = useRef(null);
 
   // ── Cargar direcciones y métodos al montar ──
   useEffect(() => {
@@ -135,7 +133,7 @@ function Checkout() {
       .finally(() => setMetodoLoading(false));
   }, []);
 
-  // ── SignalR ──
+  // ── SignalR — solo StockActualizado (ProductoOcultado/Actualizado lo maneja CartContext) ──
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -144,24 +142,10 @@ function Checkout() {
       .withAutomaticReconnect()
       .build();
     connection.on('StockActualizado', () => setStockAviso(true));
-
-    // El admin editó precio de un producto que está en el carrito
-    connection.on('ProductoActualizado', ({ idProducto, precio }) => {
-      if (precio == null) return;
-      const enCarrito = cartItems.some(({ product }) => product.id === idProducto);
-      if (enCarrito) setPrecioAviso(true);
-    });
-
-    // El admin ocultó un producto que está en el carrito
-    connection.on('ProductoOcultado', ({ idProducto }) => {
-      const enCarrito = cartItems.some(({ product }) => product.id === idProducto);
-      if (enCarrito) setOcultadoAviso(true);
-    });
-
     connection.start().catch(() => {});
     connectionRef.current = connection;
     return () => { connection.stop(); };
-  }, [cartItems]);
+  }, []);
 
   const shipping = cartTotal > 500 ? 0 : 50;
   const isv      = cartTotal * ISV_RATE;
@@ -355,16 +339,6 @@ function Checkout() {
         {stockAviso && (
           <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setStockAviso(false)}>
             El stock de algún producto cambió mientras procesabas tu pedido. Verifica tu carrito.
-          </Alert>
-        )}
-        {precioAviso && (
-          <Alert severity="info" sx={{ mb: 2 }} onClose={() => setPrecioAviso(false)}>
-            El precio de uno o más productos en tu carrito fue actualizado. Revisa el resumen antes de confirmar.
-          </Alert>
-        )}
-        {ocultadoAviso && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setOcultadoAviso(false)}>
-            Un producto de tu carrito ya no está disponible. Por favor revisa tu carrito antes de continuar.
           </Alert>
         )}
 

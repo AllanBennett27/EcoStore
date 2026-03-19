@@ -15,9 +15,9 @@ api.interceptors.request.use((config) => {
 });
 
 export const productosService = {
-  getAll: () => api.get('/api/productos'),
-  getActive: () => api.get('/api/productos/activos'),
-  getById: (id) => api.get(`/api/productos/${id}`),
+  getAll:    ()  => api.get('/api/productos',          { cache: false }),
+  getActive: ()  => api.get('/api/productos/activos',  { cache: false }),
+  getById:   (id) => api.get(`/api/productos/${id}`,   { cache: false }),
   create: (data) => api.post('/api/productos', data),
   update: (id, data) => api.put(`/api/productos/${id}`, data),
   hide: (id) => api.patch(`/api/productos/${id}/ocultar`),
@@ -35,13 +35,14 @@ export const authService = {
 };
 
 export const usuariosService = {
-  getAll:        ()                 => api.get('/api/usuarios'),
+  getAll:        ()                 => api.get('/api/usuarios', { cache: false }),
   updateRole:    (idUsuario, idRol) => api.patch('/api/usuarios/role', { idUsuario, idRol }),
   create:        (data)             => api.post('/api/usuarios', data),
   toggleEstado:  (id)               => api.patch(`/api/usuarios/${id}/estado`),
 };
 
 export const carritoService = {
+  get:     ()                          => api.get('/api/carrito', { cache: false }),
   agregar: (productoId, cantidad, precio) =>
     api.post('/api/carrito/agregar', { productoId, cantidad, precio }),
   eliminar: (productoId) =>

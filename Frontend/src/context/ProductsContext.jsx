@@ -26,6 +26,7 @@ export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [adminProducts, setAdminProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastHiddenId, setLastHiddenId] = useState(null);
   const [adminLoading, setAdminLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -65,10 +66,10 @@ export function ProductsProvider({ children }) {
   // SignalR — reacciona a cambios de productos en tiempo real
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    const hubOptions = token ? { accessTokenFactory: () => token } : {};
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl('/cartHub', { accessTokenFactory: () => token })
+      .withUrl('/cartHub', hubOptions)
       .withAutomaticReconnect()
       .build();
 
@@ -90,6 +91,7 @@ export function ProductsProvider({ children }) {
 
     // Admin ocultó el producto — desaparece de la lista activa
     connection.on('ProductoOcultado', ({ idProducto }) => {
+      setLastHiddenId(idProducto);
       setProducts((prev) => prev.filter((p) => p.id !== idProducto));
       setAdminProducts((prev) =>
         prev.map((p) => (p.id === idProducto ? { ...p, status: 'Inactivo' } : p)),
@@ -168,6 +170,7 @@ export function ProductsProvider({ children }) {
         adminLoading,
         saving,
         error,
+        lastHiddenId,
         loadProducts,
         loadAdminProducts,
         getProductById,

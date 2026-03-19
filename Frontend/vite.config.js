@@ -10,10 +10,10 @@ export default defineConfig({
         target: 'http://localhost:5263',
         changeOrigin: true,
       },
-      '/hubs': {
+      '/cartHub': {
         target: 'http://localhost:5263',
         changeOrigin: true,
-        ws: true, // WebSocket support for SignalR
+        ws: true,
       },
     },
   },

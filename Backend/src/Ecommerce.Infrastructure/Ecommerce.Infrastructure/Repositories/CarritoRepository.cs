@@ -1,3 +1,5 @@
+using Ecommerce.Domain.DTOs;
+using Ecommerce.Domain.Entities;
 using Ecommerce.Domain.Interfaces;
 using Ecommerce.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
@@ -42,5 +44,24 @@ public class CarritoRepository : ICarritoRepository
             "EXEC dbo.sp_EliminarProductoDelCarrito @IdUsuario, @IdProducto",
             parameters
         );
+    }
+
+    public async Task<IEnumerable<CarritoItemDto>> ObtenerCarritoAsync(int usuarioId)
+    {
+        return await _context.DetalleCarritos
+            .Include(dc => dc.Carrito)
+            .Include(dc => dc.Producto)
+                .ThenInclude(p => p.Categoria)
+            .Where(dc => dc.Carrito.IdUsuario == usuarioId && dc.Carrito.Estado == CarritoEstado.Activo)
+            .Select(dc => new CarritoItemDto(
+                dc.IdProducto,
+                dc.Producto.NombreProducto,
+                dc.PrecioUnitario,
+                dc.Cantidad,
+                dc.Subtotal,
+                dc.Producto.ImagenUrl,
+                dc.Producto.Categoria.NombreCategoria
+            ))
+            .ToListAsync();
     }
 }

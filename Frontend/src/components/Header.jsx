@@ -205,6 +205,14 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                 )}
                 {(isAdmin || isVentas) && <Divider />}
                 {(isAdmin || isVentas) && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas"); }}>
+                    <ListItemIcon>
+                      <PointOfSale fontSize="small" color="success" />
+                    </ListItemIcon>
+                    Panel de Ventas
+                  </MenuItem>
+                )}
+                {(isAdmin || isVentas) && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/pedidos"); }}>
                     <ListItemIcon>
                       <PointOfSale fontSize="small" color="success" />
@@ -237,6 +245,14 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                   </MenuItem>
                 )}
                 {(isAdmin || isFinanzas) && <Divider />}
+                {(isAdmin || isFinanzas) && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/finanzas"); }}>
+                    <ListItemIcon>
+                      <AccountBalance fontSize="small" color="warning" />
+                    </ListItemIcon>
+                    Panel de Finanzas
+                  </MenuItem>
+                )}
                 {(isAdmin || isFinanzas) && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/finanzas/facturas"); }}>
                     <ListItemIcon>

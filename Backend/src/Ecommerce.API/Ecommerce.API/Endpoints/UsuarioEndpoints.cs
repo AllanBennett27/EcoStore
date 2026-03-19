@@ -65,7 +65,7 @@ public static class UsuarioEndpoints
 
                 return Results.Ok(new { message = "Estado actualizado." });
             })
-            .RequireAuthorization(p => p.RequireRole("Admin"))
+            .RequireAuthorization("AdminOnly")
             .WithName("ToggleEstadoUsuario")
             .WithOpenApi();
 
@@ -92,7 +92,7 @@ public static class UsuarioEndpoints
                     ? Results.Ok(new { message = "Usuario creado exitosamente." })
                     : Results.BadRequest(new { message = "No se pudo crear el usuario." });
             })
-            .RequireAuthorization(p => p.RequireRole("Admin"))
+            .RequireAuthorization("AdminOnly")
             .WithName("CrearUsuarioAdmin")
             .WithOpenApi();
     }

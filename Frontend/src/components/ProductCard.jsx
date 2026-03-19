@@ -21,7 +21,8 @@ import { useAuth } from "../context/AuthContext";
 import { useFavoritos } from "../context/FavoritosContext";
 
 function ProductCard({ product, onAddToCart }) {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isVentas, isFinanzas } = useAuth();
+  const isStaff = isAdmin || isVentas || isFinanzas;
   const { isFavorito, toggleFavorito } = useFavoritos();
   const esFav = isFavorito(product.id);
 
@@ -90,8 +91,8 @@ function ProductCard({ product, onAddToCart }) {
           }}
         />
 
-        {/* Corazón — solo para usuarios logueados no admin */}
-        {user && !isAdmin && (
+        {/* Corazón — solo para clientes */}
+        {user && !isStaff && (
           <IconButton
             onClick={handleFavorito}
             sx={{
@@ -153,7 +154,7 @@ function ProductCard({ product, onAddToCart }) {
             L.{Number(product.price).toFixed(2)}
           </Typography>
         </Box>
-        {!isAdmin && (
+        {!isStaff && (
           <Button
             variant="contained"
             size="small"

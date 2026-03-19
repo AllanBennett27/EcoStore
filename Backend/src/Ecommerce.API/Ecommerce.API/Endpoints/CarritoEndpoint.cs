@@ -12,7 +12,17 @@ public static class CarritoEndpoints
     {
         var group = routes.MapGroup("/api/carrito");
 
-        // Dentro de CarritoEndpoints.cs
+        group.MapGet("/", async (ICarritoRepository repo, ClaimsPrincipal user) =>
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim)) return Results.Unauthorized();
+                var items = await repo.ObtenerCarritoAsync(int.Parse(userIdClaim));
+                return Results.Ok(items);
+            })
+            .RequireAuthorization()
+            .WithName("ObtenerCarrito")
+            .WithOpenApi();
+
         group.MapPost("/agregar", async (
                 CarritoRequestDTO.CarritoRequest request, 
                 ICarritoRepository repo, 

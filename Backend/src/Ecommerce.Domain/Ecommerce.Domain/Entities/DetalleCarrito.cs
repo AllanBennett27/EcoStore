@@ -3,6 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ecommerce.Domain.Entities;
 
+public enum CarritoEstado
+{
+    Comprado = 0,
+    Activo   = 1,
+}
+
 [Table("Carrito")]
 public class Carrito
 {
@@ -19,9 +25,8 @@ public class Carrito
     public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
     [Required]
-    [StringLength(20)]
     [Column("estado")]
-    public string Estado { get; set; } = "Activo";
+    public CarritoEstado Estado { get; set; } = CarritoEstado.Activo;
 
     [ForeignKey("IdUsuario")]
     public virtual Usuario Usuario { get; set; } = null!;

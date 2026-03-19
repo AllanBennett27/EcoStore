@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Eccomerce.API.Endpoints;
 using Ecommerce.API.Endpoints;
 using Ecommerce.API.Hubs;
@@ -38,6 +39,13 @@ builder.Services.AddScoped<IMetodoPagoRepository, MetodoPagoRepository>();
 builder.Services.AddScoped<IFavoritoRepository, FavoritoRepository>();
 builder.Services.AddScoped<IViewsRepository, ViewsRepository>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminOnly", policy =>
+        policy.RequireAssertion(ctx =>
+        {
+            var role = ctx.User.FindFirstValue(ClaimTypes.Role) ?? "";
+            return role.Contains("admin", StringComparison.OrdinalIgnoreCase);
+        }));
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = "Bearer";

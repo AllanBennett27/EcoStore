@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
+import { CartProvider, useCart } from "./context/CartContext";
 import { ProductsProvider } from "./context/ProductsContext";
 import { FavoritosProvider } from "./context/FavoritosContext";
 import Auth from "./pages/Auth";
@@ -25,6 +25,27 @@ import VentasCarritos from "./pages/ventas/VentasCarritos";
 import FinanzasDashboard from "./pages/finanzas/FinanzasDashboard";
 import FinanzasFacturas from "./pages/finanzas/FinanzasFacturas";
 import FinanzasReportes from "./pages/finanzas/FinanzasReportes";
+
+function CartSnackbar() {
+  const { cartNotification, clearCartNotification } = useCart();
+  return (
+    <Snackbar
+      open={!!cartNotification}
+      autoHideDuration={5000}
+      onClose={clearCartNotification}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    >
+      <Alert
+        onClose={clearCartNotification}
+        severity={cartNotification?.severity ?? 'info'}
+        variant="filled"
+        sx={{ width: '100%' }}
+      >
+        {cartNotification?.message}
+      </Alert>
+    </Snackbar>
+  );
+}
 
 function AuthSnackbar() {
   const { notification, closeNotification } = useAuth();
@@ -80,6 +101,7 @@ function App() {
               <Route path="/finanzas/reportes" element={<RoleGuard roles={['finanzas','admin']}><FinanzasReportes /></RoleGuard>} />
             </Routes>
             <AuthSnackbar />
+            <CartSnackbar />
           </CartProvider>
           </FavoritosProvider>
         </ProductsProvider>

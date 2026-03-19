@@ -1,5 +1,7 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import * as signalR from '@microsoft/signalr';
 import { carritoService } from '../services/api';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -8,8 +10,72 @@ export function useCart() {
   return useContext(CartContext);
 }
 
+function mapItem(dto) {
+  return {
+    product: {
+      id:          dto.idProducto,
+      name:        dto.nombreProducto,
+      price:       dto.precioUnitario,
+      imageUrl:    dto.imagenUrl,
+      category:    dto.nombreCategoria,
+    },
+    quantity: dto.cantidad,
+  };
+}
+
 export function CartProvider({ children }) {
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState([]);
+  const [cartNotification, setCartNotification] = useState(null);
+  const cartItemsRef = useRef(cartItems);
+
+  // Mantener ref actualizada
+  useEffect(() => { cartItemsRef.current = cartItems; }, [cartItems]);
+
+  // Cargar carrito desde BD al iniciar sesión
+  useEffect(() => {
+    if (!user) { setCartItems([]); return; }
+    carritoService.get()
+      .then((res) => setCartItems((res.data ?? []).map(mapItem)))
+      .catch(() => {});
+  }, [user]);
+
+  // SignalR global — notifica si un producto del carrito fue ocultado o su precio cambió
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!user || !token) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('/cartHub', { accessTokenFactory: () => token })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on('ProductoOcultado', ({ idProducto }) => {
+      const enCarrito = cartItemsRef.current.some(({ product }) => product.id === idProducto);
+      if (enCarrito) {
+        carritoService.eliminar(idProducto).catch(() => {});
+        setCartItems((prev) => prev.filter((item) => item.product.id !== idProducto));
+        setCartNotification({
+          message: 'Un producto de tu carrito ya no está disponible y fue eliminado.',
+          severity: 'error',
+        });
+      }
+    });
+
+    connection.on('ProductoActualizado', ({ idProducto, precio }) => {
+      if (precio == null) return;
+      const enCarrito = cartItemsRef.current.some(({ product }) => product.id === idProducto);
+      if (enCarrito) {
+        setCartNotification({
+          message: 'El precio de un producto en tu carrito fue actualizado. Revisa el resumen antes de confirmar.',
+          severity: 'info',
+        });
+      }
+    });
+
+    connection.start().catch(() => {});
+    return () => { connection.stop(); };
+  }, [user]);
 
   const addToCart = async (product) => {
     // Calcula la nueva cantidad antes de llamar al endpoint
@@ -87,6 +153,10 @@ export function CartProvider({ children }) {
     0
   );
 
+  const clearCartNotification = () => setCartNotification(null);
+  const showCartNotification = (message, severity = 'warning') =>
+    setCartNotification({ message, severity });
+
   return (
     <CartContext.Provider
       value={{
@@ -97,6 +167,9 @@ export function CartProvider({ children }) {
         clearCart,
         cartCount,
         cartTotal,
+        cartNotification,
+        clearCartNotification,
+        showCartNotification,
       }}
     >
       {children}
