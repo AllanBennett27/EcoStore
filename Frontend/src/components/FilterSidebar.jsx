@@ -9,11 +9,14 @@ import {
   Divider,
   Button,
   Skeleton,
+  Switch,
 } from "@mui/material";
-import { FilterList } from "@mui/icons-material";
+import { FilterList, Favorite } from "@mui/icons-material";
 import { categoriasService } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 function FilterSidebar({ filters, onFilterChange }) {
+  const { user, isAdmin } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loadingCats, setLoadingCats] = useState(true);
 
@@ -37,7 +40,7 @@ function FilterSidebar({ filters, onFilterChange }) {
   };
 
   const handleClearFilters = () => {
-    onFilterChange({ categories: [], priceRange: [0, 500] });
+    onFilterChange({ categories: [], priceRange: [0, 500], soloFavoritos: false });
   };
 
   return (
@@ -67,6 +70,31 @@ function FilterSidebar({ filters, onFilterChange }) {
       </Box>
 
       <Divider sx={{ mb: 2 }} />
+
+      {/* Mis Favoritos — solo usuarios logueados no admin */}
+      {user && !isAdmin && (
+        <>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!filters.soloFavoritos}
+                onChange={(e) => onFilterChange({ ...filters, soloFavoritos: e.target.checked })}
+                color="error"
+                size="small"
+              />
+            }
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Favorite sx={{ fontSize: 16, color: "error.main" }} />
+                <Typography variant="body2" fontWeight={filters.soloFavoritos ? 700 : 400}>
+                  Mis favoritos
+                </Typography>
+              </Box>
+            }
+          />
+          <Divider sx={{ my: 2 }} />
+        </>
+      )}
 
       {/* Categories */}
       <Typography variant="subtitle1" fontWeight={600} gutterBottom>

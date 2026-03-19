@@ -15,4 +15,5 @@ public interface IUsuarioRepository
     Task<IEnumerable<UsuarioDto>> GetAllUsersAsync();
     Task<Usuario?> GetByIdAsync(int id);
     Task<bool> UpdateUserRoleAsync(int userId, int roleId);
+    Task<bool> ToggleEstadoAsync(int userId);
 }

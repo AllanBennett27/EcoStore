@@ -8,12 +8,14 @@ import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { useAuth } from "../context/AuthContext";
+import { useFavoritos } from "../context/FavoritosContext";
 
 function Products() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { products, loading, error } = useProducts();
   const { user } = useAuth();
+  const { isFavorito } = useFavoritos();
 
   const handleAddToCart = (product) => {
     if (!user) {
@@ -41,25 +43,14 @@ function Products() {
   }, [categoryFromUrl]);
 
   const filteredProducts = products.filter((product) => {
+    if (filters.soloFavoritos && !isFavorito(product.id)) return false;
     if (
       search &&
       !product.name.toLowerCase().includes(search.toLowerCase()) &&
       !product.description.toLowerCase().includes(search.toLowerCase())
-    ) {
-      return false;
-    }
-    if (
-      filters.categories.length > 0 &&
-      !filters.categories.includes(product.category)
-    ) {
-      return false;
-    }
-    if (
-      product.price < filters.priceRange[0] ||
-      product.price > filters.priceRange[1]
-    ) {
-      return false;
-    }
+    ) return false;
+    if (filters.categories.length > 0 && !filters.categories.includes(product.category)) return false;
+    if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) return false;
     return true;
   });
 

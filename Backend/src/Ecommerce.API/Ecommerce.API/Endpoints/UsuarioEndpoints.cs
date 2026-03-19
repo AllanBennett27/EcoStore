@@ -1,5 +1,6 @@
 using Ecommerce.Domain.Interfaces;
 using Ecommerce.Domain.DTOs;
+using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.API.Endpoints;
 
@@ -32,7 +33,6 @@ public static class UsuarioEndpoints
                     Apellido = usuario.Apellido,
                     Correo = usuario.Correo,
                     Telefono = usuario.Telefono,
-                    Direccion = usuario.Direccion,
                     FechaRegistro = usuario.FechaRegistro,
                     Estado = usuario.Estado,
                     IdRol = usuario.IdRol,
@@ -44,8 +44,8 @@ public static class UsuarioEndpoints
             .WithName("GetUsuarioById")
             .WithOpenApi();
 
-        // PUT: Update user role
-        group.MapPut("/role", async (UpdateUserRoleDto dto, IUsuarioRepository repository) =>
+        // PATCH: Update user role
+        group.MapPatch("/role", async (UpdateUserRoleDto dto, IUsuarioRepository repository) =>
             {
                 var success = await repository.UpdateUserRoleAsync(dto.IdUsuario, dto.IdRol);
                 if (!success)
@@ -54,6 +54,46 @@ public static class UsuarioEndpoints
                 return Results.Ok(new { message = "Rol actualizado exitosamente" });
             })
             .WithName("UpdateUserRole")
+            .WithOpenApi();
+
+        // PATCH: Toggle estado Activo/Desactivado
+        group.MapPatch("/{id:int}/estado", async (int id, IUsuarioRepository repository) =>
+            {
+                var success = await repository.ToggleEstadoAsync(id);
+                if (!success)
+                    return Results.NotFound(new { message = "Usuario no encontrado." });
+
+                return Results.Ok(new { message = "Estado actualizado." });
+            })
+            .RequireAuthorization(p => p.RequireRole("Admin"))
+            .WithName("ToggleEstadoUsuario")
+            .WithOpenApi();
+
+        // POST: Admin crea un usuario con rol específico
+        group.MapPost("/", async (CreateUsuarioAdminDto dto, IUsuarioRepository repository) =>
+            {
+                var existe = await repository.GetByEmailAsync(dto.Correo);
+                if (existe != null)
+                    return Results.BadRequest(new { message = "El correo ya está registrado." });
+
+                var nuevoUsuario = new Usuario
+                {
+                    Nombre   = dto.Nombre,
+                    Apellido = dto.Apellido,
+                    Correo   = dto.Correo,
+                    Telefono = dto.Telefono,
+                    IdRol    = dto.IdRol,
+                    Estado   = "Activo"
+                };
+
+                var resultado = await repository.RegistrarAsync(nuevoUsuario, dto.Password);
+
+                return resultado
+                    ? Results.Ok(new { message = "Usuario creado exitosamente." })
+                    : Results.BadRequest(new { message = "No se pudo crear el usuario." });
+            })
+            .RequireAuthorization(p => p.RequireRole("Admin"))
+            .WithName("CrearUsuarioAdmin")
             .WithOpenApi();
     }
 }

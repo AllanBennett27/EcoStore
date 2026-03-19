@@ -25,13 +25,16 @@ import {
   ManageAccounts,
   PointOfSale,
   AccountBalance,
+  LocationOn,
+  People,
+  ShoppingCartCheckout,
 } from "@mui/icons-material";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 
 function Header({ showSearch = false, showCart = true, searchValue = "", onSearchChange }) {
   const { cartCount, clearCart } = useCart();
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isVentas, isFinanzas, logout } = useAuth();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
@@ -70,6 +73,25 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
             EcoStore
           </Typography>
         </Box>
+
+        {/* Location widget — visible solo cuando hay sesión */}
+        {user && (user.ciudad || user.pais) && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+            <LocationOn sx={{ color: "rgba(255,255,255,0.85)", fontSize: 22, flexShrink: 0 }} />
+            <Box sx={{ lineHeight: 1.2 }}>
+              {user.ciudad && (
+                <Typography variant="caption" sx={{ display: "block", color: "#fff", fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {user.ciudad}
+                </Typography>
+              )}
+              {user.pais && (
+                <Typography variant="caption" sx={{ display: "block", color: "rgba(255,255,255,0.75)", whiteSpace: "nowrap" }}>
+                  {user.pais}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        )}
 
         {/* Search Bar - only on products and cart pages */}
         {showSearch && (
@@ -114,7 +136,7 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
 
         {/* Actions */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          {!isAdmin && showCart && (
+          {!isAdmin && !isVentas && !isFinanzas && showCart && (
             <IconButton
               color="inherit"
               onClick={() => navigate("/cart")}
@@ -181,8 +203,8 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                     Gestión de Roles
                   </MenuItem>
                 )}
-                {isAdmin && <Divider />}
-                {isAdmin && (
+                {(isAdmin || isVentas) && <Divider />}
+                {(isAdmin || isVentas) && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/pedidos"); }}>
                     <ListItemIcon>
                       <PointOfSale fontSize="small" color="success" />
@@ -190,7 +212,7 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                     Gestión de Pedidos
                   </MenuItem>
                 )}
-                {isAdmin && (
+                {(isAdmin || isVentas) && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/stock"); }}>
                     <ListItemIcon>
                       <Inventory fontSize="small" color="success" />
@@ -198,8 +220,24 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                     Stock de Productos
                   </MenuItem>
                 )}
-                {isAdmin && <Divider />}
-                {isAdmin && (
+                {(isAdmin || isVentas) && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/clientes"); }}>
+                    <ListItemIcon>
+                      <People fontSize="small" color="success" />
+                    </ListItemIcon>
+                    Clientes por Ventas
+                  </MenuItem>
+                )}
+                {(isAdmin || isVentas) && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/ventas/carritos"); }}>
+                    <ListItemIcon>
+                      <ShoppingCartCheckout fontSize="small" color="success" />
+                    </ListItemIcon>
+                    Carritos Activos
+                  </MenuItem>
+                )}
+                {(isAdmin || isFinanzas) && <Divider />}
+                {(isAdmin || isFinanzas) && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/finanzas/facturas"); }}>
                     <ListItemIcon>
                       <AccountBalance fontSize="small" color="warning" />
@@ -207,7 +245,7 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                     Facturas
                   </MenuItem>
                 )}
-                {isAdmin && (
+                {(isAdmin || isFinanzas) && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/finanzas/reportes"); }}>
                     <ListItemIcon>
                       <Assessment fontSize="small" color="warning" />

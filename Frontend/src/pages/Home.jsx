@@ -26,35 +26,20 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 const categoryMeta = {
-  "Alimentos Organicos": {
-    emoji: "🥗",
+  EcoCleaning: {
+    emoji: "🧹",
     description:
-      "Descubre una seleccion de alimentos cultivados con amor por la tierra — sin pesticidas, sin quimicos, sin compromisos. Desde frutas y verduras frescas hasta granos y superalimentos, cada producto esta pensado para nutrir tu cuerpo y apoyar a productores responsables.",
+      "Limpia tu hogar sin dañar el planeta. Productos de limpieza biodegradables, esponjas reutilizables y detergentes naturales que eliminan suciedad y bacterias sin químicos agresivos ni residuos contaminantes.",
   },
-  "Cuidado Personal": {
-    emoji: "🧴",
-    description:
-      "Tu piel merece lo mejor de la naturaleza. Explora cosmeticos, cremas, shampoos y jabones elaborados con ingredientes botanicos puros, libres de parabenos y sulfatos agresivos. Cuida de ti mismo sin hacerle dano al planeta.",
-  },
-  "Hogar Ecologico": {
+  EcoHome: {
     emoji: "🏡",
     description:
-      "Transforma tu hogar en un espacio mas sostenible. Encuentra detergentes biodegradables, utensilios reutilizables y productos de limpieza naturales que protegen tu familia y reducen la huella ambiental de tu rutina diaria.",
+      "Convierte tu hogar en un espacio más sostenible. Utensilios ecológicos, decoración natural y artículos del hogar fabricados con materiales reciclados o de origen responsable para una vida más consciente.",
   },
-  "Bebidas Naturales": {
-    emoji: "🍵",
+  EcoPackaging: {
+    emoji: "♻️",
     description:
-      "Hidratate con conciencia. Desde infusiones de hierbas medicinales y jugos prensados en frio hasta aguas aromatizadas y tizanas relajantes — todas elaboradas sin conservantes, colorantes ni azucares anadidos. Puro sabor, pura naturaleza.",
-  },
-  "Ropa Sostenible": {
-    emoji: "👕",
-    description:
-      "La moda puede ser etica y hermosa a la vez. Viste con prendas confeccionadas en algodon organico, lino natural y bambu bajo estandares de comercio justo. Cada prenda cuenta una historia de respeto: al trabajador, al ambiente y a ti.",
-  },
-  Jardineria: {
-    emoji: "🌱",
-    description:
-      "Cultiva vida desde casa. Ya sea que tengas un gran jardin o solo un balcon, aqui encontraras semillas organicas certificadas, tierra compostal, fertilizantes naturales y todo lo necesario para hacer crecer tu propio rincon verde.",
+      "Empaca con conciencia, entrega con propósito. Descubre bolsas reutilizables, cajas de cartón reciclado, papel kraft y soluciones de embalaje 100% sostenibles que reducen la huella plástica sin sacrificar durabilidad ni presentación.",
   },
 };
 

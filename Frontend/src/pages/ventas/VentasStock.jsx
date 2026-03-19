@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -15,44 +15,43 @@ import {
   InputAdornment,
   IconButton,
   Tooltip,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { Search, Clear, WarningAmber } from '@mui/icons-material';
 import Header from '../../components/Header';
-
-// TODO: reemplazar con ventasService.getStock()
-const MOCK_STOCK = [
-  { IdProducto: 1,  NombreProducto: 'Aceite de Oliva Orgánico',  Categoria: 'Alimentos Orgánicos',  StockActual: 12, FechaActualizacion: '2025-03-14', EstadoProducto: 'Activo' },
-  { IdProducto: 2,  NombreProducto: 'Shampoo Natural',           Categoria: 'Cuidado Personal',     StockActual: 3,  FechaActualizacion: '2025-03-13', EstadoProducto: 'Activo' },
-  { IdProducto: 3,  NombreProducto: 'Té Verde Orgánico',         Categoria: 'Bebidas Naturales',    StockActual: 20, FechaActualizacion: '2025-03-12', EstadoProducto: 'Activo' },
-  { IdProducto: 4,  NombreProducto: 'Quinoa Premium',            Categoria: 'Alimentos Orgánicos',  StockActual: 0,  FechaActualizacion: '2025-03-11', EstadoProducto: 'Activo' },
-  { IdProducto: 5,  NombreProducto: 'Jabón de Lavanda',          Categoria: 'Cuidado Personal',     StockActual: 8,  FechaActualizacion: '2025-03-10', EstadoProducto: 'Activo' },
-  { IdProducto: 6,  NombreProducto: 'Almendras Orgánicas',       Categoria: 'Alimentos Orgánicos',  StockActual: 2,  FechaActualizacion: '2025-03-10', EstadoProducto: 'Activo' },
-  { IdProducto: 7,  NombreProducto: 'Camiseta de Algodón',       Categoria: 'Ropa Sostenible',      StockActual: 15, FechaActualizacion: '2025-03-09', EstadoProducto: 'Activo' },
-  { IdProducto: 8,  NombreProducto: 'Maceta Ecológica',          Categoria: 'Hogar Ecológico',      StockActual: 4,  FechaActualizacion: '2025-03-08', EstadoProducto: 'Activo' },
-  { IdProducto: 9,  NombreProducto: 'Semillas de Chía',          Categoria: 'Alimentos Orgánicos',  StockActual: 30, FechaActualizacion: '2025-03-07', EstadoProducto: 'Activo' },
-  { IdProducto: 10, NombreProducto: 'Bolsa Reutilizable',        Categoria: 'Hogar Ecológico',      StockActual: 1,  FechaActualizacion: '2025-03-06', EstadoProducto: 'Inactivo' },
-];
+import { inventarioService } from '../../services/api';
 
 const STOCK_BAJO = 5;
 
-function StockChip({ stock }) {
-  if (stock === 0)       return <Chip label="Sin stock"  color="error"   size="small" />;
-  if (stock < STOCK_BAJO) return <Chip label="Stock bajo" color="warning" size="small" />;
-  return                        <Chip label="Disponible" color="success" size="small" />;
+function getEstadoStock(stock) {
+  if (stock === 0)        return { label: 'Sin stock',  color: 'error'   };
+  if (stock < STOCK_BAJO) return { label: 'Stock bajo', color: 'warning' };
+  return                         { label: 'Disponible', color: 'success' };
 }
 
 function VentasStock() {
-  const [search, setSearch] = useState('');
+  const [stock, setStock]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [search, setSearch]   = useState('');
+
+  useEffect(() => {
+    inventarioService.getAll()
+      .then((res) => setStock(res.data))
+      .catch(() => setError('No se pudo cargar el inventario.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const query    = search.trim().toLowerCase();
-  const filtered = MOCK_STOCK.filter(
+  const filtered = stock.filter(
     (s) =>
       !query ||
-      s.NombreProducto.toLowerCase().includes(query) ||
-      s.Categoria.toLowerCase().includes(query)
+      s.nombreProducto.toLowerCase().includes(query) ||
+      s.categoria.toLowerCase().includes(query)
   );
 
-  const stockBajo = MOCK_STOCK.filter((s) => s.StockActual < STOCK_BAJO).length;
+  const stockBajo = stock.filter((s) => s.stockActual < STOCK_BAJO).length;
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -65,18 +64,24 @@ function VentasStock() {
               Stock de Productos
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {filtered.length} de {MOCK_STOCK.length} productos
+              {filtered.length} de {stock.length} productos
             </Typography>
           </Box>
           {stockBajo > 0 && (
             <Chip
               icon={<WarningAmber />}
-              label={`${stockBajo} producto(s) con stock bajo`}
+              label={`${stockBajo} producto(s) con stock bajo o agotado`}
               color="warning"
               variant="outlined"
             />
           )}
         </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 2, mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
         <TextField
           size="small"
@@ -114,62 +119,85 @@ function VentasStock() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered.map((s) => (
-                  <TableRow
-                    key={s.IdProducto}
-                    hover
-                    sx={{
-                      '&:last-child td': { border: 0 },
-                      bgcolor: s.StockActual < STOCK_BAJO ? 'warning.50' : 'inherit',
-                    }}
-                  >
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {s.StockActual < STOCK_BAJO && (
-                          <Tooltip title="Stock bajo o agotado">
-                            <WarningAmber fontSize="small" color="warning" />
-                          </Tooltip>
-                        )}
-                        <Typography variant="body2" fontWeight={500}>
-                          {s.NombreProducto}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">{s.Categoria}</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography
-                        fontWeight={700}
-                        color={s.StockActual === 0 ? 'error.main' : s.StockActual < STOCK_BAJO ? 'warning.dark' : 'success.dark'}
-                      >
-                        {s.StockActual}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <StockChip stock={s.StockActual} />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(s.FechaActualizacion).toLocaleDateString('es-HN')}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={s.EstadoProducto}
-                        color={s.EstadoProducto === 'Activo' ? 'success' : 'default'}
-                        size="small"
-                        variant="outlined"
-                      />
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                      <CircularProgress size={28} color="success" />
                     </TableCell>
                   </TableRow>
-                ))}
-                {filtered.length === 0 && (
+                ) : filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                      <Typography color="text.secondary">No se encontraron productos.</Typography>
+                      <Typography color="text.secondary">
+                        {search ? `No se encontraron productos para "${search}".` : 'No hay productos en inventario.'}
+                      </Typography>
                     </TableCell>
                   </TableRow>
+                ) : (
+                  filtered.map((s) => {
+                    const estadoStock = getEstadoStock(s.stockActual);
+                    const esAlerta    = s.stockActual < STOCK_BAJO;
+                    return (
+                      <TableRow
+                        key={s.idInventario}
+                        hover
+                        sx={{
+                          '&:last-child td': { border: 0 },
+                          bgcolor: esAlerta ? 'warning.50' : 'inherit',
+                        }}
+                      >
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {esAlerta && (
+                              <Tooltip title={s.stockActual === 0 ? 'Sin stock' : 'Stock bajo'}>
+                                <WarningAmber fontSize="small" color="warning" />
+                              </Tooltip>
+                            )}
+                            <Typography variant="body2" fontWeight={500}>
+                              {s.nombreProducto}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">{s.categoria}</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            fontWeight={700}
+                            color={
+                              s.stockActual === 0
+                                ? 'error.main'
+                                : s.stockActual < STOCK_BAJO
+                                ? 'warning.dark'
+                                : 'success.dark'
+                            }
+                          >
+                            {s.stockActual}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={estadoStock.label}
+                            color={estadoStock.color}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date(s.fechaActualizacion).toLocaleDateString('es-HN')}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={s.estadoProducto}
+                            color={s.estadoProducto === 'Activo' ? 'success' : 'default'}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

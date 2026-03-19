@@ -24,9 +24,21 @@ import {
   Person,
   Phone,
   Home,
-  ArrowBack,
+  LocationOn,
+  Public,
 } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
+
+const EMPTY_REGISTER = {
+  nombre: "",
+  apellido: "",
+  correo: "",
+  password: "",
+  confirmPassword: "",
+  telefono: "",
+  departamento: "",
+  pais: "",
+};
 
 function Auth() {
   const navigate = useNavigate();
@@ -37,15 +49,7 @@ function Auth() {
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [registerData, setRegisterData] = useState({
-    nombre: "",
-    apellido: "",
-    correo: "",
-    password: "",
-    confirmPassword: "",
-    telefono: "",
-    direccion: "",
-  });
+  const [registerData, setRegisterData] = useState(EMPTY_REGISTER);
 
   const handleTabChange = (_, v) => {
     setTab(v);
@@ -67,7 +71,11 @@ function Auth() {
     e.preventDefault();
     const result = await login(loginData.email, loginData.password);
     if (result.success) {
-      navigate(result.role.includes("admin") ? "/admin/products" : "/");
+      const role = result.role;
+      if (role.includes("admin"))    navigate("/admin/products");
+      else if (role.includes("ventas"))   navigate("/ventas");
+      else if (role.includes("finanzas")) navigate("/finanzas");
+      else navigate("/");
     }
   };
 
@@ -75,24 +83,17 @@ function Auth() {
     e.preventDefault();
     if (passwordMismatch) return;
     const result = await register({
-      nombre: registerData.nombre,
-      apellido: registerData.apellido,
-      correo: registerData.correo,
-      password: registerData.password,
-      telefono: registerData.telefono || "",
-      direccion: registerData.direccion || "",
+      nombre:       registerData.nombre,
+      apellido:     registerData.apellido,
+      correo:       registerData.correo,
+      password:     registerData.password,
+      telefono:     registerData.telefono || "",
+      departamento: registerData.departamento,
+      pais:         registerData.pais,
     });
     if (result.success) {
       setRegisterSuccess(true);
-      setRegisterData({
-        nombre: "",
-        apellido: "",
-        correo: "",
-        password: "",
-        confirmPassword: "",
-        telefono: "",
-        direccion: "",
-      });
+      setRegisterData(EMPTY_REGISTER);
     }
   };
 
@@ -201,12 +202,14 @@ function Auth() {
                 onChange={handleLoginChange}
                 margin="normal"
                 required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="primary" />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
               <TextField
@@ -219,23 +222,25 @@ function Auth() {
                 onChange={handleLoginChange}
                 margin="normal"
                 required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="primary" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        size="small"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
 
@@ -304,12 +309,14 @@ function Auth() {
                   value={registerData.nombre}
                   onChange={handleRegisterChange}
                   required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person color="primary" />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
                 <TextField
@@ -320,12 +327,14 @@ function Auth() {
                   value={registerData.apellido}
                   onChange={handleRegisterChange}
                   required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person color="primary" />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
               </Box>
@@ -338,30 +347,59 @@ function Auth() {
                 value={registerData.telefono}
                 onChange={handleRegisterChange}
                 margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone color="primary" />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
-              <TextField
-                fullWidth
-                size="small"
-                label="Direccion (opcional)"
-                name="direccion"
-                value={registerData.direccion}
-                onChange={handleRegisterChange}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Home color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+
+              {/* Ubicación */}
+              <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Departamento"
+                  name="departamento"
+                  value={registerData.departamento}
+                  onChange={handleRegisterChange}
+                  margin="normal"
+                  required
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LocationOn color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="País"
+                  name="pais"
+                  value={registerData.pais}
+                  onChange={handleRegisterChange}
+                  margin="normal"
+                  required
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Public color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Box>
+
               <TextField
                 fullWidth
                 size="small"
@@ -372,12 +410,14 @@ function Auth() {
                 onChange={handleRegisterChange}
                 margin="normal"
                 required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="primary" />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
               <TextField
@@ -390,23 +430,25 @@ function Auth() {
                 onChange={handleRegisterChange}
                 margin="normal"
                 required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="primary" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        size="small"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
               <TextField
@@ -421,23 +463,25 @@ function Auth() {
                 required
                 error={passwordMismatch}
                 helperText={passwordMismatch ? "Las contrasenas no coinciden" : ""}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="primary" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        edge="end"
-                        size="small"
-                      >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
 
@@ -483,8 +527,6 @@ function Auth() {
           )}
         </CardContent>
       </Card>
-
-     
     </Box>
   );
 }

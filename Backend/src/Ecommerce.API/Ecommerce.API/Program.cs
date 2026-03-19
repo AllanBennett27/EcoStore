@@ -32,6 +32,11 @@ builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ICarritoRepository, CarritoRepository>();
+builder.Services.AddScoped<IInventarioRepository, InventarioRepository>();
+builder.Services.AddScoped<IDireccionEnvioRepository, DireccionEnvioRepository>();
+builder.Services.AddScoped<IMetodoPagoRepository, MetodoPagoRepository>();
+builder.Services.AddScoped<IFavoritoRepository, FavoritoRepository>();
+builder.Services.AddScoped<IViewsRepository, ViewsRepository>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddAuthentication(options =>
 {
@@ -44,7 +49,7 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])), 
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
         ValidateIssuer = false, 
         ValidateAudience = false
     };
@@ -91,6 +96,12 @@ app.MapCategoriaEndpoints();
 app.MapAuthEndpoints();
 app.MapCarritoEndpoints();
 app.MapUsuarioEndpoints();
+app.MapInventarioEndpoints();
+app.MapDireccionEnvioEndpoints();
+app.MapMetodoPagoEndpoints();
+app.MapFavoritoEndpoints();
+app.MapViewsEndpoints();
+app.MapCheckoutEndpoints();
 app.Run();
 
 

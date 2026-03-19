@@ -11,47 +11,65 @@ public static class AuthEndpoints
     {
         var group = routes.MapGroup("/api/auth");
 
-        group.MapPost("/registrar", async (AuthDto.RegistroRequest req, IUsuarioRepository repo) =>
+        group.MapPost("/registrar", async (
+            AuthDto.RegistroRequest req,
+            IUsuarioRepository repo,
+            IDireccionEnvioRepository direccionRepo) =>
+        {
+            var existe = await repo.GetByEmailAsync(req.Correo);
+            if (existe != null)
+                return Results.BadRequest("El correo electrónico ya está registrado.");
+
+            var nuevoUsuario = new Usuario
             {
-              
-                var existe = await repo.GetByEmailAsync(req.Correo);
-                if (existe != null) 
-                    return Results.BadRequest("El correo electrónico ya está registrado.");
+                Nombre   = req.Nombre,
+                Apellido = req.Apellido,
+                Telefono = req.Telefono,
+                Correo   = req.Correo,
+                IdRol    = 2,
+                Estado   = "Activo"
+            };
 
-               
-                var nuevoUsuario = new Usuario
-                {
-                    Nombre = req.Nombre,
-                    Apellido = req.Apellido, 
-                    Telefono = req.Telefono, 
-                    Direccion = req.Direccion, 
-                    Correo = req.Correo,
-                    IdRol = 2, 
-                    Estado = "Activo"
-                };
+            var resultado = await repo.RegistrarAsync(nuevoUsuario, req.Password);
+            if (!resultado)
+                return Results.BadRequest("No se pudo completar el registro.");
 
-                var resultado = await repo.RegistrarAsync(nuevoUsuario, req.Password);
+            // Crear dirección principal del usuario recién registrado
+            await direccionRepo.CreateAsync(nuevoUsuario.IdUsuario, new CreateDireccionEnvioDto(
+                Calle: string.Empty,
+                Ciudad: string.Empty,
+                Departamento: req.Departamento,
+                Pais: req.Pais,
+                CodigoPostal: null,
+                EsPrincipal: true
+            ));
 
-                return resultado 
-                    ? Results.Ok("Usuario registrado exitosamente.") 
-                    : Results.BadRequest("No se pudo completar el registro.");
-            })
-            .WithName("RegistrarUsuario")
-            .WithOpenApi();
-        group.MapPost("/login", async (AuthDto.LoginRequest req, IUsuarioRepository repo, TokenService tokenService) =>
+            return Results.Ok("Usuario registrado exitosamente.");
+        })
+        .WithName("RegistrarUsuario")
+        .WithOpenApi();
+
+        group.MapPost("/login", async (
+            AuthDto.LoginRequest req,
+            IUsuarioRepository repo,
+            IDireccionEnvioRepository direccionRepo,
+            TokenService tokenService) =>
         {
             var usuario = await repo.ValidarLoginAsync(req.Email, req.Password);
-
             if (usuario == null) return Results.Unauthorized();
 
-            // Generamos el token real
             var token = tokenService.GenerarToken(usuario);
 
-            return Results.Ok(new
-            {
-                Token = token
-            });
+            var direccionPrincipal = await direccionRepo.GetPrincipalAsync(usuario.IdUsuario);
+
+            return Results.Ok(new AuthDto.LoginResponse(
+                token,
+                usuario.IdUsuario,
+                usuario.Nombre,
+                usuario.Rol.NombreRol,
+                direccionPrincipal?.Ciudad,
+                direccionPrincipal?.Pais
+            ));
         });
     }
-   
 }

@@ -49,13 +49,15 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const res = await authService.login({ email, password });
-      const { token } = res.data;
+      const { token, ciudad, pais } = res.data;
 
       const claims = decodeToken(token);
       const userData = {
         name: claims?.name || email,
         email: claims?.email || email,
         role: claims?.role || '',
+        ciudad: ciudad || null,
+        pais: pais || null,
       };
 
       localStorage.setItem('token', token);
@@ -105,10 +107,12 @@ export function AuthProvider({ children }) {
     });
   };
 
-  const isAdmin = user?.role?.includes('admin') ?? false;
+  const isAdmin   = user?.role?.includes('admin')   ?? false;
+  const isVentas  = user?.role?.includes('ventas')  ?? false;
+  const isFinanzas = user?.role?.includes('finanzas') ?? false;
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, clearError, updateUser, isAdmin, notification, closeNotification }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, logout, clearError, updateUser, isAdmin, isVentas, isFinanzas, notification, closeNotification }}>
       {children}
     </AuthContext.Provider>
   );

@@ -8,10 +8,28 @@ import {
   Box,
   Chip,
   CardMedia,
+  IconButton,
 } from "@mui/material";
-import { AddShoppingCart, EnergySavingsLeaf, Image as ImageIcon } from "@mui/icons-material";
+import {
+  AddShoppingCart,
+  EnergySavingsLeaf,
+  Image as ImageIcon,
+  Favorite,
+  FavoriteBorder,
+} from "@mui/icons-material";
+import { useAuth } from "../context/AuthContext";
+import { useFavoritos } from "../context/FavoritosContext";
 
 function ProductCard({ product, onAddToCart }) {
+  const { user, isAdmin } = useAuth();
+  const { isFavorito, toggleFavorito } = useFavoritos();
+  const esFav = isFavorito(product.id);
+
+  const handleFavorito = (e) => {
+    e.preventDefault(); // evitar navegar al detalle
+    toggleFavorito(product.id);
+  };
+
   return (
     <Card
       elevation={2}
@@ -54,6 +72,7 @@ function ProductCard({ product, onAddToCart }) {
           <ImageIcon sx={{ fontSize: 64, color: "primary.main" }} />
         )}
 
+        {/* Chip categoría */}
         <Chip
           icon={<EnergySavingsLeaf sx={{ fontSize: "14px !important", color: "#fff !important" }} />}
           label={product.category}
@@ -70,6 +89,27 @@ function ProductCard({ product, onAddToCart }) {
             backdropFilter: "blur(4px)",
           }}
         />
+
+        {/* Corazón — solo para usuarios logueados no admin */}
+        {user && !isAdmin && (
+          <IconButton
+            onClick={handleFavorito}
+            sx={{
+              position: "absolute",
+              top: 4,
+              right: 18,
+              bgcolor: "rgba(255,255,255,0.85)",
+              backdropFilter: "blur(4px)",
+              "&:hover": { bgcolor: "rgba(255,255,255,1)" },
+              p: 0.5,
+            }}
+          >
+            {esFav
+              ? <Favorite sx={{ fontSize: 30, color: "error.main" }} />
+              : <FavoriteBorder sx={{ fontSize: 30, color: "error.light" }} />
+            }
+          </IconButton>
+        )}
       </Box>
 
       <CardContent sx={{ flexGrow: 1, pb: 1, pt: 1.5 }}>
@@ -113,19 +153,21 @@ function ProductCard({ product, onAddToCart }) {
             L.{Number(product.price).toFixed(2)}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddShoppingCart />}
-          onClick={() => onAddToCart(product)}
-          sx={{
-            borderRadius: 2,
-            boxShadow: "0 2px 8px rgba(46, 125, 50, 0.25)",
-            "&:hover": { boxShadow: "0 4px 12px rgba(46, 125, 50, 0.35)" },
-          }}
-        >
-          Agregar
-        </Button>
+        {!isAdmin && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddShoppingCart />}
+            onClick={() => onAddToCart(product)}
+            sx={{
+              borderRadius: 2,
+              boxShadow: "0 2px 8px rgba(46, 125, 50, 0.25)",
+              "&:hover": { boxShadow: "0 4px 12px rgba(46, 125, 50, 0.35)" },
+            }}
+          >
+            Agregar
+          </Button>
+        )}
       </CardActions>
     </Card>
   );

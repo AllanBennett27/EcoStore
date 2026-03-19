@@ -24,12 +24,15 @@ import {
   VerifiedUser,
   LocalShipping,
   Image as ImageIcon,
+  Favorite,
+  FavoriteBorder,
 } from "@mui/icons-material";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { useAuth } from "../context/AuthContext";
+import { useFavoritos } from "../context/FavoritosContext";
 
 const ecoBadges = [
   { icon: <EnergySavingsLeaf sx={{ fontSize: 15 }} />, label: "100% Natural" },
@@ -95,7 +98,8 @@ function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { products, getProductById } = useProducts();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { isFavorito, toggleFavorito } = useFavoritos();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -297,22 +301,45 @@ function ProductDetail() {
                 </Box>
               </Box>
 
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<AddShoppingCart />}
-                onClick={handleAddToCart}
-                fullWidth
-                sx={{
-                  py: 1.5,
-                  fontSize: "1rem",
-                  borderRadius: 3,
-                  boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
-                  "&:hover": { boxShadow: "0 6px 20px rgba(46, 125, 50, 0.4)" },
-                }}
-              >
-                Agregar al carrito - L.{(Number(product.price) * quantity).toFixed(2)}
-              </Button>
+              {!isAdmin && (
+                <Box sx={{ display: "flex", gap: 1.5 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<AddShoppingCart />}
+                    onClick={handleAddToCart}
+                    fullWidth
+                    sx={{
+                      py: 1.5,
+                      fontSize: "1rem",
+                      borderRadius: 3,
+                      boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
+                      "&:hover": { boxShadow: "0 6px 20px rgba(46, 125, 50, 0.4)" },
+                    }}
+                  >
+                    Agregar al carrito - L.{(Number(product.price) * quantity).toFixed(2)}
+                  </Button>
+
+                  {user && (
+                    <IconButton
+                      onClick={() => toggleFavorito(product.id)}
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 3,
+                        px: 1.5,
+                        color: isFavorito(product.id) ? "error.main" : "action.active",
+                        "&:hover": { bgcolor: "rgba(211,47,47,0.06)" },
+                      }}
+                    >
+                      {isFavorito(product.id)
+                        ? <Favorite sx={{ fontSize: 26 }} />
+                        : <FavoriteBorder sx={{ fontSize: 26 }} />
+                      }
+                    </IconButton>
+                  )}
+                </Box>
+              )}
             </Box>
           </Box>
 

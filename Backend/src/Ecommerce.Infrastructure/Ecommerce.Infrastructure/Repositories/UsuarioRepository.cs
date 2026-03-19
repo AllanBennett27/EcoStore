@@ -36,6 +36,7 @@ public class UsuarioRepository : IUsuarioRepository
         var usuario = await GetByEmailAsync(email);
 
         if (usuario == null) return null;
+        if (usuario.Estado == "Desactivado") return null;
 
         bool isValid = BC.Verify(password, usuario.Contrasenia);
 
@@ -53,7 +54,6 @@ public class UsuarioRepository : IUsuarioRepository
                 Apellido = u.Apellido,
                 Correo = u.Correo,
                 Telefono = u.Telefono,
-                Direccion = u.Direccion,
                 FechaRegistro = u.FechaRegistro,
                 Estado = u.Estado,
                 IdRol = u.IdRol,
@@ -75,6 +75,15 @@ public class UsuarioRepository : IUsuarioRepository
         if (usuario == null) return false;
 
         usuario.IdRol = roleId;
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> ToggleEstadoAsync(int userId)
+    {
+        var usuario = await GetByIdAsync(userId);
+        if (usuario == null) return false;
+
+        usuario.Estado = usuario.Estado == "Activo" ? "Desactivado" : "Activo";
         return await _context.SaveChangesAsync() > 0;
     }
 }

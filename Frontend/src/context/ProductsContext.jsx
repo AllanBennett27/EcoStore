@@ -61,7 +61,9 @@ export function ProductsProvider({ children }) {
   }, []);
 
   const refreshProducts = async () => {
-    await Promise.all([loadProducts(), loadAdminProducts()]);
+    const promises = [loadProducts()];
+    if (adminProducts.length > 0) promises.push(loadAdminProducts());
+    await Promise.all(promises);
   };
 
   const getProductById = async (id) => {

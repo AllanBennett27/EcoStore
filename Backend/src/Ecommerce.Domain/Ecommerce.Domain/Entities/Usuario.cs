@@ -35,10 +35,6 @@ public class Usuario
     [Column("telefono")]
     public string? Telefono { get; set; }
 
-    [StringLength(500)]
-    [Column("direccion")]
-    public string? Direccion { get; set; }
-
     [Required]
     [Column("fecha_registro")]
     public DateTime FechaRegistro { get; set; } = DateTime.Now;

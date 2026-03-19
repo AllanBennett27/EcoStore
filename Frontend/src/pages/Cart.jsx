@@ -359,6 +359,7 @@ function Cart() {
                 variant="contained"
                 fullWidth
                 size="large"
+                onClick={() => navigate('/checkout')}
                 sx={{
                   py: 1.4,
                   fontSize: "1rem",
