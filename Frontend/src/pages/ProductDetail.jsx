@@ -96,7 +96,7 @@ function RelatedCard({ product, navigate }) {
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, showCartNotification } = useCart();
   const { products, getProductById, lastHiddenId } = useProducts();
   const { user, isAdmin } = useAuth();
   const { isFavorito, toggleFavorito } = useFavoritos();
@@ -115,9 +115,10 @@ function ProductDetail() {
   // Si el producto que se está viendo fue ocultado por el admin, volver a la lista
   useEffect(() => {
     if (lastHiddenId === Number(id)) {
+      showCartNotification('Este producto ya no está disponible.', 'error');
       navigate('/products');
     }
-  }, [lastHiddenId, id, navigate]);
+  }, [lastHiddenId, id, navigate, showCartNotification]);
 
   const related = product
     ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
