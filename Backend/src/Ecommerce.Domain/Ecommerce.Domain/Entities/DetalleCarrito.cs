@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ecommerce.Domain.Entities;
 
+[Table("Carrito")]
 public class Carrito
 {
     [Key]
@@ -28,6 +29,7 @@ public class Carrito
     public virtual ICollection<DetalleCarrito> Detalles { get; set; } = new List<DetalleCarrito>();
 }
 
+[Table("DetalleCarrito")]
 public class DetalleCarrito
 {
     [Key]

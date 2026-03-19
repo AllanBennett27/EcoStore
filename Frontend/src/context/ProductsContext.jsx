@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import * as signalR from '@microsoft/signalr';
 import { productosService } from '../services/api';
 
 const ProductsContext = createContext();
@@ -28,6 +29,7 @@ export function ProductsProvider({ children }) {
   const [adminLoading, setAdminLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const connectionRef = useRef(null);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -58,6 +60,51 @@ export function ProductsProvider({ children }) {
 
   useEffect(() => {
     loadProducts();
+  }, []);
+
+  // SignalR — reacciona a cambios de productos en tiempo real
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('/cartHub', { accessTokenFactory: () => token })
+      .withAutomaticReconnect()
+      .build();
+
+    // Admin editó precio u otros campos
+    connection.on('ProductoActualizado', ({ idProducto, nombre, precio, descripcion, imagenUrl }) => {
+      const patch = (p) =>
+        p.id === idProducto
+          ? {
+              ...p,
+              ...(nombre      != null && { name:        nombre }),
+              ...(precio      != null && { price:       precio }),
+              ...(descripcion != null && { description: descripcion }),
+              ...(imagenUrl   != null && { imageUrl:    imagenUrl }),
+            }
+          : p;
+      setProducts((prev) => prev.map(patch));
+      setAdminProducts((prev) => prev.map(patch));
+    });
+
+    // Admin ocultó el producto — desaparece de la lista activa
+    connection.on('ProductoOcultado', ({ idProducto }) => {
+      setProducts((prev) => prev.filter((p) => p.id !== idProducto));
+      setAdminProducts((prev) =>
+        prev.map((p) => (p.id === idProducto ? { ...p, status: 'Inactivo' } : p)),
+      );
+    });
+
+    // Admin reactivó el producto — recarga para obtener sus datos completos
+    connection.on('ProductoActivado', () => {
+      loadProducts();
+    });
+
+    connection.start().catch(() => {});
+    connectionRef.current = connection;
+    return () => { connection.stop(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshProducts = async () => {

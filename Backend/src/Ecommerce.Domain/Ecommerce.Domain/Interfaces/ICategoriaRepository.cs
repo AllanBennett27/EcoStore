@@ -7,4 +7,5 @@ namespace Ecommerce.Domain.Interfaces;
 public interface ICategoriaRepository
 {
     Task<IEnumerable<CategoriaDto>> GetAllAsync();
+    Task<CategoriaDto> CreateAsync(CreateCategoriaDto dto);
 }

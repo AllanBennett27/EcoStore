@@ -25,7 +25,8 @@ export const productosService = {
 };
 
 export const categoriasService = {
-  getAll: () => api.get('/api/categorias'),
+  getAll:  ()     => api.get('/api/categorias'),
+  create:  (data) => api.post('/api/categorias', data),
 };
 
 export const authService = {
@@ -77,7 +78,8 @@ export const ventasService = {
 };
 
 export const checkoutService = {
-  confirmar: () => api.post('/api/checkout/confirmar'),
+  confirmar: (idDireccion, idMetodo) =>
+    api.post('/api/checkout/confirmar', { idDireccion, idMetodo }),
 };
 
 export const direccionService = {

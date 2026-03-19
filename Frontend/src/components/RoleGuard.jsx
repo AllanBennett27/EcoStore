@@ -3,14 +3,14 @@ import { useAuth } from '../context/AuthContext';
 
 // roles: array de roles permitidos, ej. ['ventas', 'admin']
 function RoleGuard({ children, roles }) {
-  const { user } = useAuth();
+  const { user, isAdmin, isVentas, isFinanzas } = useAuth();
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  const userRole = user.role?.toLowerCase() ?? '';
-  const allowed  = roles.map((r) => r.toLowerCase());
+  const flagMap = { admin: isAdmin, ventas: isVentas, finanzas: isFinanzas };
+  const allowed = roles.some((r) => flagMap[r.toLowerCase()]);
 
-  if (!allowed.includes(userRole)) return <Navigate to="/" replace />;
+  if (!allowed) return <Navigate to="/" replace />;
 
   return children;
 }

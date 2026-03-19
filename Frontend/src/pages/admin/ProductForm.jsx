@@ -11,8 +11,15 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  InputAdornment,
+  Tooltip,
 } from '@mui/material';
-import { Save, ArrowBack, Image as ImageIcon } from '@mui/icons-material';
+import { Save, ArrowBack, Image as ImageIcon, Add } from '@mui/icons-material';
 import Header from '../../components/Header';
 import { useProducts } from '../../context/ProductsContext';
 import { categoriasService } from '../../services/api';
@@ -35,6 +42,12 @@ function ProductForm() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState(null);
+
+  // Nueva categoría
+  const [catDialog, setCatDialog]     = useState(false);
+  const [catForm, setCatForm]         = useState({ NombreCategoria: '', Descripcion: '' });
+  const [catError, setCatError]       = useState('');
+  const [catSaving, setCatSaving]     = useState(false);
 
   useEffect(() => {
     categoriasService
@@ -66,6 +79,25 @@ function ProductForm() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSaveCategoria = async () => {
+    if (!catForm.NombreCategoria.trim()) { setCatError('El nombre es requerido.'); return; }
+    if (!catForm.Descripcion.trim())     { setCatError('La descripción es requerida.'); return; }
+    setCatSaving(true);
+    setCatError('');
+    try {
+      const res = await categoriasService.create(catForm);
+      const nueva = res.data;
+      setCategories((prev) => [...prev, nueva]);
+      setForm((prev) => ({ ...prev, categoryId: String(nueva.idCategoria) }));
+      setCatForm({ NombreCategoria: '', Descripcion: '' });
+      setCatDialog(false);
+    } catch {
+      setCatError('No se pudo crear la categoría.');
+    } finally {
+      setCatSaving(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -163,21 +195,32 @@ function ProductForm() {
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Categoria"
-                      name="categoryId"
-                      value={form.categoryId}
-                      onChange={handleChange}
-                      required
-                    >
-                      {categories.map((cat) => (
-                        <MenuItem key={cat.idCategoria} value={String(cat.idCategoria)}>
-                          {cat.nombreCategoria}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Categoría"
+                        name="categoryId"
+                        value={form.categoryId}
+                        onChange={handleChange}
+                        required
+                      >
+                        {categories.map((cat) => (
+                          <MenuItem key={cat.idCategoria} value={String(cat.idCategoria)}>
+                            {cat.nombreCategoria}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <Tooltip title="Nueva categoría">
+                        <Button
+                          variant="outlined"
+                          sx={{ minWidth: 42, px: 0 }}
+                          onClick={() => { setCatForm({ NombreCategoria: '', Descripcion: '' }); setCatError(''); setCatDialog(true); }}
+                        >
+                          <Add />
+                        </Button>
+                      </Tooltip>
+                    </Box>
                   </Grid>
 
                   <Grid size={{ xs: 12 }}>
@@ -241,6 +284,31 @@ function ProductForm() {
           </CardContent>
         </Card>
       </Box>
+      {/* ── Dialog nueva categoría ── */}
+      <Dialog open={catDialog} onClose={() => setCatDialog(false)} maxWidth="xs" fullWidth
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}>
+        <DialogTitle fontWeight={700}>Nueva categoría</DialogTitle>
+        <Divider />
+        <DialogContent sx={{ pt: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {catError && <Alert severity="error">{catError}</Alert>}
+          <TextField
+            fullWidth size="small" label="Nombre"
+            value={catForm.NombreCategoria}
+            onChange={(e) => setCatForm((p) => ({ ...p, NombreCategoria: e.target.value }))}
+          />
+          <TextField
+            fullWidth size="small" label="Descripción" multiline rows={3}
+            value={catForm.Descripcion}
+            onChange={(e) => setCatForm((p) => ({ ...p, Descripcion: e.target.value }))}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setCatDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSaveCategoria} disabled={catSaving}>
+            {catSaving ? 'Guardando...' : 'Crear categoría'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

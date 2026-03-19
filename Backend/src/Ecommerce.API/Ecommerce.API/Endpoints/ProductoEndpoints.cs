@@ -1,5 +1,7 @@
+using Ecommerce.API.Hubs;
 using Ecommerce.Domain.DTOs;
 using Ecommerce.Domain.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Ecommerce.API.Endpoints;
 
@@ -43,32 +45,48 @@ public static class ProductoEndpoints
             .WithName("CreateProducto")
             .WithOpenApi();
 
-        group.MapPut("/{id:int}", async (int id, UpdateProductoDto updateDto, IProductoRepository repository) =>
+        group.MapPut("/{id:int}", async (int id, UpdateProductoDto updateDto, IProductoRepository repository, IHubContext<CartHub> hubContext) =>
             {
                 var actualizado = await repository.UpdateAsync(id, updateDto);
-                return actualizado
-                    ? Results.Ok(new { mensaje = "Producto actualizado correctamente" })
-                    : Results.NotFound($"Producto con ID {id} no encontrado");
+                if (!actualizado)
+                    return Results.NotFound($"Producto con ID {id} no encontrado");
+
+                await hubContext.Clients.All.SendAsync("ProductoActualizado", new
+                {
+                    idProducto  = id,
+                    nombre      = updateDto.Nombre,
+                    precio      = updateDto.Precio,
+                    descripcion = updateDto.Descripcion,
+                    imagenUrl   = updateDto.ImagenUrl,
+                });
+
+                return Results.Ok(new { mensaje = "Producto actualizado correctamente" });
             })
             .WithName("UpdateProducto")
             .WithOpenApi();
 
-        group.MapPatch("/{id:int}/ocultar", async (int id, IProductoRepository repository) =>
+        group.MapPatch("/{id:int}/ocultar", async (int id, IProductoRepository repository, IHubContext<CartHub> hubContext) =>
             {
                 var actualizado = await repository.ChangeStatusAsync(id, "Inactivo");
-                return actualizado
-                    ? Results.Ok(new { mensaje = "Producto ocultado correctamente" })
-                    : Results.NotFound($"Producto con ID {id} no encontrado");
+                if (!actualizado)
+                    return Results.NotFound($"Producto con ID {id} no encontrado");
+
+                await hubContext.Clients.All.SendAsync("ProductoOcultado", new { idProducto = id });
+
+                return Results.Ok(new { mensaje = "Producto ocultado correctamente" });
             })
             .WithName("HideProducto")
             .WithOpenApi();
 
-        group.MapPatch("/{id:int}/activar", async (int id, IProductoRepository repository) =>
+        group.MapPatch("/{id:int}/activar", async (int id, IProductoRepository repository, IHubContext<CartHub> hubContext) =>
             {
                 var actualizado = await repository.ChangeStatusAsync(id, "Activo");
-                return actualizado
-                    ? Results.Ok(new { mensaje = "Producto activado correctamente" })
-                    : Results.NotFound($"Producto con ID {id} no encontrado");
+                if (!actualizado)
+                    return Results.NotFound($"Producto con ID {id} no encontrado");
+
+                await hubContext.Clients.All.SendAsync("ProductoActivado", new { idProducto = id });
+
+                return Results.Ok(new { mensaje = "Producto activado correctamente" });
             })
             .WithName("ActivateProducto")
             .WithOpenApi();

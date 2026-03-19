@@ -3,12 +3,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ecommerce.Domain.Entities;
 
+[Table("Factura")]
 public class Factura
 {
     [Key]
     [Column("id_factura")]
     public int IdFactura { get; set; }
-    [ForeignKey("id_pedido")]
+    [Column("id_pedido")]
     public int IdPedido { get; set; }
     [Column("fecha_factura")]
     public DateTime FechaFactura { get; set; } = DateTime.Now;
@@ -20,5 +21,6 @@ public class Factura
     public decimal Total { get; set; }
 
     // Relación: Una factura pertenece a un pedido
+    [ForeignKey("IdPedido")]
     public virtual Pedido Pedido { get; set; } = null!;
 }

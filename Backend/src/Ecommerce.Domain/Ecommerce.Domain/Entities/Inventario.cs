@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ecommerce.Domain.Entities;
 
+[Table("Inventario")]
 public class Inventario
 {
     [Key]
@@ -16,5 +17,6 @@ public class Inventario
     public DateTime FechaActualizacion { get; set; } = DateTime.Now;
 
     // Relación: Un registro de inventario pertenece a un producto
+    [ForeignKey("IdProducto")]
     public virtual Producto Producto { get; set; } = null!;
 }

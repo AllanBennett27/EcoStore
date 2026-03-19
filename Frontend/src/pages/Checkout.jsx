@@ -105,7 +105,9 @@ function Checkout() {
   // Estado pedido
   const [loading, setLoading]       = useState(false);
   const [pedido, setPedido]         = useState(null);
-  const [stockAviso, setStockAviso] = useState(false);
+  const [stockAviso, setStockAviso]   = useState(false);
+  const [precioAviso, setPrecioAviso] = useState(false);
+  const [ocultadoAviso, setOcultadoAviso] = useState(false);
   const connectionRef               = useRef(null);
 
   // ── Cargar direcciones y métodos al montar ──
@@ -142,10 +144,24 @@ function Checkout() {
       .withAutomaticReconnect()
       .build();
     connection.on('StockActualizado', () => setStockAviso(true));
+
+    // El admin editó precio de un producto que está en el carrito
+    connection.on('ProductoActualizado', ({ idProducto, precio }) => {
+      if (precio == null) return;
+      const enCarrito = cartItems.some(({ product }) => product.id === idProducto);
+      if (enCarrito) setPrecioAviso(true);
+    });
+
+    // El admin ocultó un producto que está en el carrito
+    connection.on('ProductoOcultado', ({ idProducto }) => {
+      const enCarrito = cartItems.some(({ product }) => product.id === idProducto);
+      if (enCarrito) setOcultadoAviso(true);
+    });
+
     connection.start().catch(() => {});
     connectionRef.current = connection;
     return () => { connection.stop(); };
-  }, []);
+  }, [cartItems]);
 
   const shipping = cartTotal > 500 ? 0 : 50;
   const isv      = cartTotal * ISV_RATE;
@@ -270,21 +286,22 @@ function Checkout() {
   const handleConfirm = async () => {
     if (!validateForm()) return;
 
-    const needDir = selectedDirId === 'new' || savedDirs.length === 0;
-    if (needDir) {
-      const e = validateDireccion(newDir);
-      if (Object.keys(e).length > 0) { setDirErrors(e); setDirDialog(true); return; }
+    if (!selectedDirId || selectedDirId === 'new' || savedDirs.length === 0) {
+      setFormErrors((p) => ({ ...p, direccion: 'Debes seleccionar una dirección de envío.' }));
+      return;
     }
 
-    const needMetodo = selectedMetodoId === 'new' || savedMetodos.length === 0;
-    if (needMetodo) {
-      setFormErrors((p) => ({ ...p, metodo: 'Debes agregar un método de pago.' }));
+    if (!selectedMetodoId || selectedMetodoId === 'new' || savedMetodos.length === 0) {
+      setFormErrors((p) => ({ ...p, metodo: 'Debes seleccionar un método de pago.' }));
       return;
     }
 
     setLoading(true);
     try {
-      const res = await checkoutService.confirmar();
+      const res = await checkoutService.confirmar(
+        Number(selectedDirId),
+        Number(selectedMetodoId),
+      );
       const { idPedido, total: totalReal } = res.data;
       await clearCart();
       setPedido({ numero: idPedido, total: totalReal ?? total, fecha: new Date() });
@@ -338,6 +355,16 @@ function Checkout() {
         {stockAviso && (
           <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setStockAviso(false)}>
             El stock de algún producto cambió mientras procesabas tu pedido. Verifica tu carrito.
+          </Alert>
+        )}
+        {precioAviso && (
+          <Alert severity="info" sx={{ mb: 2 }} onClose={() => setPrecioAviso(false)}>
+            El precio de uno o más productos en tu carrito fue actualizado. Revisa el resumen antes de confirmar.
+          </Alert>
+        )}
+        {ocultadoAviso && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setOcultadoAviso(false)}>
+            Un producto de tu carrito ya no está disponible. Por favor revisa tu carrito antes de continuar.
           </Alert>
         )}
 

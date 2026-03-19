@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Ecommerce.API.Hubs;
+using Ecommerce.Domain.DTOs;
 using Ecommerce.Infrastructure.Data;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.SqlClient;
@@ -12,6 +13,7 @@ public static class CheckoutEndpoints
     public static void MapCheckoutEndpoints(this IEndpointRouteBuilder routes)
     {
         routes.MapPost("/api/checkout/confirmar", async (
+            ConfirmarCompraDto request,
             ApplicationDbContext db,
             IHubContext<CartHub> hubContext,
             ClaimsPrincipal user) =>
@@ -24,11 +26,11 @@ public static class CheckoutEndpoints
 
             try
             {
-                // Obtener carrito activo del usuario via ADO.NET
                 var conn = db.Database.GetDbConnection();
                 if (conn.State != System.Data.ConnectionState.Open)
                     await conn.OpenAsync();
 
+                // Obtener carrito activo del usuario
                 int carritoId;
                 using (var cmd = conn.CreateCommand())
                 {
@@ -40,25 +42,38 @@ public static class CheckoutEndpoints
                     carritoId = (int)result;
                 }
 
-                // Llamar SP — THROW en CATCH propaga el error a .NET si hay fallo
-                await db.Database.ExecuteSqlRawAsync(
-                    "EXEC sp_ConfirmarCompra @p0, @p1", userId, carritoId);
+                // Llamar SP con los 4 parámetros requeridos
+                int idPedido = 0;
+                decimal totalFinal = 0;
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "EXEC sp_ConfirmarCompra @id_usuario, @id_carrito, @id_direccion, @id_metodo";
+                    cmd.Parameters.Add(new SqlParameter("@id_usuario",   userId));
+                    cmd.Parameters.Add(new SqlParameter("@id_carrito",   carritoId));
+                    cmd.Parameters.Add(new SqlParameter("@id_direccion", request.IdDireccion));
+                    cmd.Parameters.Add(new SqlParameter("@id_metodo",    request.IdMetodo));
 
-                // Obtener el pedido recién creado
-                var pedido = await db.Pedidos
-                    .Where(p => p.IdUsuario == userId)
-                    .OrderByDescending(p => p.IdPedido)
-                    .FirstAsync();
+                    using var reader = await cmd.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
+                        idPedido    = reader.GetInt32(reader.GetOrdinal("id_pedido"));
+                        totalFinal  = reader.GetDecimal(reader.GetOrdinal("total_final"));
+                    }
+                    else
+                    {
+                        // Si el SP devolvió un mensaje de error en lugar de un resultado
+                        return Results.BadRequest(new { error = "Error al procesar el pedido." });
+                    }
+                }
 
-                // Notificar a TODOS los clientes conectados que el stock cambió
-                // Esto permite demostrar concurrencia en tiempo real
+                // Notificar a TODOS los clientes que el stock cambió (demostración concurrencia)
                 await hubContext.Clients.All.SendAsync("StockActualizado", new
                 {
                     mensaje = "El inventario ha sido actualizado por una nueva compra.",
-                    idPedido = pedido.IdPedido
+                    idPedido
                 });
 
-                return Results.Ok(new { idPedido = pedido.IdPedido, total = pedido.Total });
+                return Results.Ok(new { idPedido, total = totalFinal });
             }
             catch (SqlException ex)
             {
