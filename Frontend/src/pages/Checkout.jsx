@@ -6,7 +6,7 @@ import {
   Box, Typography, Button, Card, CardContent, TextField, Divider, Grid,
   Dialog, DialogTitle, DialogContent, DialogActions, ToggleButton,
   ToggleButtonGroup, Chip, Alert, Radio, RadioGroup, FormControlLabel,
-  CircularProgress, IconButton, Tooltip, Switch,
+  CircularProgress, IconButton, Tooltip, Switch, LinearProgress, Backdrop,
 } from '@mui/material';
 import {
   ArrowBack, CheckCircle, ShoppingBag, Add, CreditCard, Payments,
@@ -75,9 +75,9 @@ function Checkout() {
 
   // Datos básicos de entrega
   const [form, setForm] = useState({
-    nombre:   user?.name  ?? '',
-    correo:   user?.email ?? '',
-    telefono: '',
+    nombre:   user?.name     ?? '',
+    correo:   user?.email    ?? '',
+    telefono: user?.telefono ?? '',
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -103,8 +103,8 @@ function Checkout() {
   const [pagoDialog, setPagoDialog]   = useState(false);
 
   // Estado pedido
-  const [loading, setLoading]       = useState(false);
-  const [pedido, setPedido]         = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [pedido, setPedido]     = useState(null);
   const [stockAviso, setStockAviso] = useState(false);
   const connectionRef = useRef(null);
 
@@ -141,7 +141,9 @@ function Checkout() {
       .withUrl('/cartHub', { accessTokenFactory: () => token })
       .withAutomaticReconnect()
       .build();
-    connection.on('StockActualizado', () => setStockAviso(true));
+    connection.on('StockActualizado', () => {
+      setStockAviso(true);
+    });
     connection.start().catch(() => {});
     connectionRef.current = connection;
     return () => { connection.stop(); };
@@ -338,7 +340,7 @@ function Checkout() {
 
         {stockAviso && (
           <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setStockAviso(false)}>
-            El stock de algún producto cambió mientras procesabas tu pedido. Verifica tu carrito.
+            El inventario fue actualizado por otra compra reciente. Verifica la disponibilidad antes de confirmar.
           </Alert>
         )}
 
@@ -793,6 +795,21 @@ function Checkout() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* ── Overlay: procesando compra ──────────────────────────────────────── */}
+      <Backdrop open={loading} sx={{ zIndex: 2000, flexDirection: 'column', gap: 3, bgcolor: 'rgba(0,0,0,0.75)' }}>
+        <CircularProgress size={64} sx={{ color: 'white' }} />
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" color="white" fontWeight={700}>
+            Revisando stock en tiempo real...
+          </Typography>
+          <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ mt: 0.5 }}>
+            Confirmando disponibilidad antes de procesar tu pedido
+          </Typography>
+        </Box>
+        <LinearProgress sx={{ width: 260, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', '& .MuiLinearProgress-bar': { bgcolor: 'success.light' } }} />
+      </Backdrop>
+
     </Box>
   );
 }

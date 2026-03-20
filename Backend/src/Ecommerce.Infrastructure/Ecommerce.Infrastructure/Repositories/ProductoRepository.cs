@@ -15,31 +15,14 @@ public class ProductoRepository : IProductoRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<ProductoDto>> GetAllAsync()
-    {
-        return await _context.Productos
-            .Include(p => p.Categoria)
-            .Select(MapToDto())
-            .ToListAsync();
-    }
+    public async Task<IEnumerable<ProductoDto>> GetAllAsync() =>
+        await BuildQuery(_context.Productos).ToListAsync();
 
-    public async Task<IEnumerable<ProductoDto>> GetActiveAsync()
-    {
-        return await _context.Productos
-            .Include(p => p.Categoria)
-            .Where(p => p.Estado == "Activo")
-            .Select(MapToDto())
-            .ToListAsync();
-    }
+    public async Task<IEnumerable<ProductoDto>> GetActiveAsync() =>
+        await BuildQuery(_context.Productos.Where(p => p.Estado == "Activo")).ToListAsync();
 
-    public async Task<ProductoDto?> GetByIdAsync(int id)
-    {
-        return await _context.Productos
-            .Include(p => p.Categoria)
-            .Where(p => p.IdProducto == id)
-            .Select(MapToDto())
-            .FirstOrDefaultAsync();
-    }
+    public async Task<ProductoDto?> GetByIdAsync(int id) =>
+        await BuildQuery(_context.Productos.Where(p => p.IdProducto == id)).FirstOrDefaultAsync();
 
     public async Task<ProductoDto> CreateAsync(CreateProductoDto createDto)
     {
@@ -64,9 +47,7 @@ public class ProductoRepository : IProductoRepository
         var producto = await _context.Productos.FindAsync(id);
 
         if (producto is null)
-        {
             return false;
-        }
 
         producto.NombreProducto = updateDto.Nombre ?? producto.NombreProducto;
         producto.Descripcion = updateDto.Descripcion ?? producto.Descripcion;
@@ -84,27 +65,28 @@ public class ProductoRepository : IProductoRepository
         var producto = await _context.Productos.FindAsync(id);
 
         if (producto is null)
-        {
             return false;
-        }
 
         producto.Estado = estado;
         await _context.SaveChangesAsync();
         return true;
     }
 
-    private static System.Linq.Expressions.Expression<Func<Producto, ProductoDto>> MapToDto()
-    {
-        return p => new ProductoDto
+    private IQueryable<ProductoDto> BuildQuery(IQueryable<Producto> source) =>
+        from p in source
+        join c in _context.Categorias on p.IdCategoria equals c.IdCategoria
+        join inv in _context.Inventarios on p.IdProducto equals inv.IdProducto into invGroup
+        from inv in invGroup.DefaultIfEmpty()
+        select new ProductoDto
         {
-            IdProducto = p.IdProducto,
-            Nombre = p.NombreProducto,
-            Descripcion = p.Descripcion,
-            Precio = p.Precio,
-            ImagenUrl = p.ImagenUrl,
-            Estado = p.Estado,
-            IdCategoria = p.IdCategoria,
-            NombreCategoria = p.Categoria.NombreCategoria
+            IdProducto      = p.IdProducto,
+            Nombre          = p.NombreProducto,
+            Descripcion     = p.Descripcion,
+            Precio          = p.Precio,
+            ImagenUrl       = p.ImagenUrl,
+            Estado          = p.Estado,
+            IdCategoria     = p.IdCategoria,
+            NombreCategoria = c.NombreCategoria,
+            StockActual     = inv != null ? inv.StockActual : 0,
         };
-    }
 }

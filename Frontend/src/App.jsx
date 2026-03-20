@@ -15,6 +15,8 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import ProductForm from "./pages/admin/ProductForm";
 import AdminReports from "./pages/admin/AdminReports";
 import RoleManagement from "./pages/admin/RoleManagement";
+import ConcurrenciaLogs from "./pages/admin/ConcurrenciaLogs";
+import MisPedidos from "./pages/MisPedidos";
 import AdminGuard from "./components/AdminGuard";
 import RoleGuard from "./components/RoleGuard";
 import VentasDashboard from "./pages/ventas/VentasDashboard";
@@ -83,6 +85,7 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/mis-pedidos" element={<MisPedidos />} />
               <Route path="/admin/products" element={<AdminGuard><AdminProducts /></AdminGuard>} />
               <Route path="/admin/products/new" element={<AdminGuard><ProductForm /></AdminGuard>} />
               <Route
@@ -91,6 +94,7 @@ function App() {
               />
               <Route path="/admin/reports" element={<AdminGuard><AdminReports /></AdminGuard>} />
               <Route path="/admin/roles" element={<AdminGuard><RoleManagement /></AdminGuard>} />
+              <Route path="/admin/concurrencia" element={<AdminGuard><ConcurrenciaLogs /></AdminGuard>} />
               <Route path="/ventas" element={<RoleGuard roles={['ventas','admin']}><VentasDashboard /></RoleGuard>} />
               <Route path="/ventas/pedidos" element={<RoleGuard roles={['ventas','admin']}><VentasPedidos /></RoleGuard>} />
               <Route path="/ventas/stock" element={<RoleGuard roles={['ventas','admin']}><VentasStock /></RoleGuard>} />

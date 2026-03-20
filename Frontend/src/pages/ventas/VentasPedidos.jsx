@@ -5,19 +5,34 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, InputAdornment, CircularProgress, Alert,
 } from '@mui/material';
-import { Visibility, Search, Clear } from '@mui/icons-material';
+import { Visibility, Search, Clear, ArrowForward } from '@mui/icons-material';
 import Header from '../../components/Header';
-import { viewsService } from '../../services/api';
+import { viewsService, ventasService } from '../../services/api';
 
 const STATUS_COLORS = {
-  Pendiente:  'warning',
+  Confirmado: 'warning',
   Procesando: 'info',
   Enviado:    'primary',
   Entregado:  'success',
   Cancelado:  'error',
 };
 
-const ESTADOS = ['Todos', 'Pendiente', 'Procesando', 'Enviado', 'Entregado', 'Cancelado'];
+const ESTADOS = ['Todos', 'Confirmado', 'Procesando', 'Enviado', 'Entregado', 'Cancelado'];
+
+const SIGUIENTES_ESTADOS = {
+  Confirmado: ['Procesando', 'Cancelado'],
+  Procesando: ['Enviado',    'Cancelado'],
+  Enviado:    ['Entregado'],
+  Entregado:  [],
+  Cancelado:  [],
+};
+
+// Normaliza el estado para que coincida con las claves del mapa
+function normalizarEstado(estado) {
+  if (!estado) return '';
+  const s = estado.trim();
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
 
 // Agrupa líneas de detalle en resumen por pedido
 function agruparPedidos(lineas) {
@@ -25,12 +40,12 @@ function agruparPedidos(lineas) {
   lineas.forEach((l) => {
     if (!map[l.idPedido]) {
       map[l.idPedido] = {
-        idPedido:    l.idPedido,
-        cliente:     l.cliente,
-        fechaPedido: l.fechaPedido,
-        estadoPedido: l.estadoPedido,
-        total:       0,
-        totalItems:  0,
+        idPedido:     l.idPedido,
+        cliente:      l.cliente,
+        fechaPedido:  l.fechaPedido,
+        estadoPedido: normalizarEstado(l.estadoPedido),
+        total:        0,
+        totalItems:   0,
       };
     }
     map[l.idPedido].total      += l.subtotal;
@@ -45,7 +60,8 @@ function VentasPedidos() {
   const [error,   setError]             = useState(null);
   const [search,  setSearch]            = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
-  const [detallePedido, setDetallePedido] = useState(null); // idPedido seleccionado
+  const [detallePedido, setDetallePedido] = useState(null);
+  const [actualizando, setActualizando]   = useState(null); // idPedido en proceso
 
   useEffect(() => {
     viewsService.getDetallePedidos()
@@ -53,6 +69,21 @@ function VentasPedidos() {
       .catch(() => setError('No se pudieron cargar los pedidos.'))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleCambiarEstado = async (idPedido, nuevoEstado) => {
+    setActualizando(idPedido);
+    try {
+      await ventasService.updateEstado(idPedido, nuevoEstado);
+      // Actualizar estado en las líneas locales sin recargar todo
+      setLineas((prev) =>
+        prev.map((l) => l.idPedido === idPedido ? { ...l, estadoPedido: nuevoEstado } : l)
+      );
+    } catch {
+      // silencioso — en producción mostrarías un toast
+    } finally {
+      setActualizando(null);
+    }
+  };
 
   const pedidos = useMemo(() => agruparPedidos(lineas), [lineas]);
 
@@ -141,6 +172,7 @@ function VentasPedidos() {
                       <TableCell sx={{ fontWeight: 600 }} align="right">Total</TableCell>
                       <TableCell sx={{ fontWeight: 600 }} align="center">Items</TableCell>
                       <TableCell sx={{ fontWeight: 600 }} align="center">Detalle</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Acción</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -175,6 +207,28 @@ function VentasPedidos() {
                             onClick={() => setDetallePedido(p)}>
                             <Visibility fontSize="small" />
                           </IconButton>
+                        </TableCell>
+                        <TableCell>
+                          {(SIGUIENTES_ESTADOS[p.estadoPedido] ?? []).length === 0 ? (
+                            <Typography variant="caption" color="text.disabled">—</Typography>
+                          ) : (
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                              {SIGUIENTES_ESTADOS[p.estadoPedido].map((siguiente) => (
+                                <Button
+                                  key={siguiente}
+                                  size="small"
+                                  variant="outlined"
+                                  color={siguiente === 'Cancelado' ? 'error' : 'success'}
+                                  endIcon={siguiente !== 'Cancelado' ? <ArrowForward sx={{ fontSize: '14px !important' }} /> : null}
+                                  disabled={actualizando === p.idPedido}
+                                  onClick={() => handleCambiarEstado(p.idPedido, siguiente)}
+                                  sx={{ fontSize: '0.7rem', py: 0.3, borderRadius: 2 }}
+                                >
+                                  {siguiente}
+                                </Button>
+                              ))}
+                            </Box>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

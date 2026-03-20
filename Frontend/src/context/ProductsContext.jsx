@@ -15,6 +15,7 @@ function mapProducto(producto) {
     name: producto.nombre,
     description: producto.descripcion || '',
     price: producto.precio,
+    stock: producto.stockActual ?? 0,
     category: producto.nombreCategoria || 'Sin categoria',
     categoryId: producto.idCategoria,
     imageUrl: producto.imagenUrl || '',
@@ -101,6 +102,15 @@ export function ProductsProvider({ children }) {
     // Admin reactivó el producto — recarga para obtener sus datos completos
     connection.on('ProductoActivado', () => {
       loadProducts();
+    });
+
+    // Una compra fue confirmada — actualiza el stock de los productos comprados en tiempo real
+    connection.on('StockActualizado', ({ stocks }) => {
+      if (!stocks?.length) return;
+      const stockMap = Object.fromEntries(stocks.map((s) => [s.idProducto, s.stockActual]));
+      const patch = (p) => stockMap[p.id] !== undefined ? { ...p, stock: stockMap[p.id] } : p;
+      setProducts((prev) => prev.map(patch));
+      setAdminProducts((prev) => prev.map(patch));
     });
 
     connection.start().catch(() => {});

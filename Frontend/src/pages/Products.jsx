@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Box, Grid, Typography, CircularProgress, Alert } from "@mui/material";
 import Header from "../components/Header";
@@ -28,19 +28,35 @@ function Products() {
   const categoryFromUrl = searchParams.get("category");
 
   const [search, setSearch] = useState("");
+  const maxPrice = useMemo(
+    () => (products.length ? Math.ceil(Math.max(...products.map((p) => p.price))) : 500),
+    [products]
+  );
+
   const [filters, setFilters] = useState({
     categories: categoryFromUrl ? [categoryFromUrl] : [],
-    priceRange: [0, 500],
+    priceRange: [0, maxPrice],
   });
 
   // Sync URL category param whenever it changes (e.g. clicking "Ver más" from Home)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilters((prev) => ({
       ...prev,
       categories: categoryFromUrl ? [categoryFromUrl] : [],
     }));
   }, [categoryFromUrl]);
+
+  // Cuando los productos cargan por primera vez, ajustar el tope del slider al precio máximo real
+  useEffect(() => {
+    if (!loading && products.length > 0) {
+      setFilters((prev) => ({
+        ...prev,
+        priceRange: [prev.priceRange[0], maxPrice],
+      }));
+    }
+  // Solo al terminar la carga inicial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const filteredProducts = products.filter((product) => {
     if (filters.soloFavoritos && !isFavorito(product.id)) return false;
@@ -59,7 +75,7 @@ function Products() {
       <Header showSearch searchValue={search} onSearchChange={setSearch} />
 
       <Box sx={{ display: "flex" }}>
-        <FilterSidebar filters={filters} onFilterChange={setFilters} />
+        <FilterSidebar filters={filters} onFilterChange={setFilters} maxPrice={maxPrice} />
 
         {/* Products Grid */}
         <Box sx={{ flex: 1, p: 3 }}>

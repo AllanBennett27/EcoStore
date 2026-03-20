@@ -104,21 +104,32 @@ function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Carga inicial del producto
   useEffect(() => {
     setLoading(true);
     getProductById(Number(id))
       .then((data) => setProduct(data))
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
+  // getProductById es estable en la vida del contexto — no re-ejecutar por su cambio de referencia
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Si el producto que se está viendo fue ocultado por el admin, volver a la lista
+  // Sincronización en tiempo real con ProductsContext:
+  // - Si el producto fue actualizado → actualiza datos locales
+  // - Si el producto fue ocultado → navega fuera y muestra aviso
   useEffect(() => {
-    if (lastHiddenId === Number(id)) {
+    if (loading) return;
+    const numId = Number(id);
+    const updated = products.find((p) => p.id === numId);
+    if (updated) {
+      setProduct(updated);
+    } else if (lastHiddenId === numId) {
       showCartNotification('Este producto ya no está disponible.', 'error');
       navigate('/products');
     }
-  }, [lastHiddenId, id, navigate, showCartNotification]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, lastHiddenId, id, loading]);
 
   const related = product
     ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
@@ -284,6 +295,30 @@ function ProductDetail() {
 
               <Divider sx={{ mb: 2.5 }} />
 
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                <Chip
+                  size="small"
+                  label={
+                    product.stock === 0
+                      ? "Sin stock"
+                      : `Stock Disponible: ${product.stock}`
+                  }
+                  sx={{
+                    fontWeight: 600,
+                    bgcolor: product.stock === 0
+                      ? "error.lighter"
+                      : product.stock <= 5
+                      ? "warning.lighter"
+                      : "#e8f5e9",
+                    color: product.stock === 0
+                      ? "error.dark"
+                      : product.stock <= 5
+                      ? "warning.dark"
+                      : "success.dark",
+                  }}
+                />
+              </Box>
+
               <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Cantidad:
@@ -303,7 +338,11 @@ function ProductDetail() {
                   <Typography sx={{ px: 2.5, py: 0.5, fontWeight: 600, minWidth: 40, textAlign: "center" }}>
                     {quantity}
                   </Typography>
-                  <IconButton size="small" onClick={() => setQuantity((q) => q + 1)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                    disabled={quantity >= product.stock}
+                  >
                     <Add fontSize="small" />
                   </IconButton>
                 </Box>
@@ -317,6 +356,7 @@ function ProductDetail() {
                     startIcon={<AddShoppingCart />}
                     onClick={handleAddToCart}
                     fullWidth
+                    disabled={product.stock === 0}
                     sx={{
                       py: 1.5,
                       fontSize: "1rem",
@@ -325,7 +365,9 @@ function ProductDetail() {
                       "&:hover": { boxShadow: "0 6px 20px rgba(46, 125, 50, 0.4)" },
                     }}
                   >
-                    Agregar al carrito - L.{(Number(product.price) * quantity).toFixed(2)}
+                    {product.stock === 0
+                      ? "Sin stock"
+                      : `Agregar al carrito - L.${(Number(product.price) * quantity).toFixed(2)}`}
                   </Button>
 
                   {user && (

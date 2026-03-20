@@ -28,6 +28,8 @@ import {
   LocationOn,
   People,
   ShoppingCartCheckout,
+  WarningAmber,
+  Receipt,
 } from "@mui/icons-material";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -178,6 +180,14 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                   </ListItemIcon>
                   Mi perfil
                 </MenuItem>
+                {!isAdmin && !isVentas && !isFinanzas && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/mis-pedidos"); }}>
+                    <ListItemIcon>
+                      <Receipt fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    Mis pedidos
+                  </MenuItem>
+                )}
                 {isAdmin && <Divider />}
                 {isAdmin && (
                   <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/products"); }}>
@@ -201,6 +211,14 @@ function Header({ showSearch = false, showCart = true, searchValue = "", onSearc
                       <ManageAccounts fontSize="small" color="primary" />
                     </ListItemIcon>
                     Gestión de Roles
+                  </MenuItem>
+                )}
+                {isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/concurrencia"); }}>
+                    <ListItemIcon>
+                      <WarningAmber fontSize="small" color="error" />
+                    </ListItemIcon>
+                    Logs de Concurrencia
                   </MenuItem>
                 )}
                 {(isAdmin || isVentas) && <Divider />}

@@ -18,9 +18,10 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { Search, Clear, WarningAmber } from '@mui/icons-material';
+import { Search, Clear, WarningAmber, AddCircleOutline, RemoveCircleOutline } from '@mui/icons-material';
 import Header from '../../components/Header';
 import { inventarioService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const STOCK_BAJO = 5;
 
@@ -31,10 +32,12 @@ function getEstadoStock(stock) {
 }
 
 function VentasStock() {
+  const { isAdmin }           = useAuth();
   const [stock, setStock]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [search, setSearch]   = useState('');
+  const [ajustando, setAjustando] = useState(null);
 
   useEffect(() => {
     inventarioService.getAll()
@@ -42,6 +45,24 @@ function VentasStock() {
       .catch(() => setError('No se pudo cargar el inventario.'))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleAjustar = async (idProducto, delta) => {
+    setAjustando(idProducto);
+    try {
+      const res = await inventarioService.ajustar(idProducto, delta);
+      const updated = res.data;
+      setStock((prev) =>
+        prev.map((s) => s.idProducto === idProducto
+          ? { ...s, stockActual: updated.stockActual, fechaActualizacion: updated.fechaActualizacion }
+          : s
+        )
+      );
+    } catch {
+      setError('No se pudo ajustar el stock.');
+    } finally {
+      setAjustando(null);
+    }
+  };
 
   const query    = search.trim().toLowerCase();
   const filtered = stock.filter(
@@ -89,19 +110,21 @@ function VentasStock() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ mb: 3, mt: 2, minWidth: 300 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search fontSize="small" color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: search && (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearch('')}>
-                  <Clear fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: search && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearch('')}>
+                    <Clear fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
@@ -113,6 +136,7 @@ function VentasStock() {
                   <TableCell sx={{ fontWeight: 600 }}>Producto</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Categoría</TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="center">Stock Actual</TableCell>
+                  {isAdmin && <TableCell sx={{ fontWeight: 600 }} align="center">Ajustar</TableCell>}
                   <TableCell sx={{ fontWeight: 600 }} align="center">Estado Stock</TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="center">Última Actualización</TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="center">Estado Producto</TableCell>
@@ -121,13 +145,13 @@ function VentasStock() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                    <TableCell colSpan={isAdmin ? 7 : 6} align="center" sx={{ py: 5 }}>
                       <CircularProgress size={28} color="success" />
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={isAdmin ? 7 : 6} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         {search ? `No se encontraron productos para "${search}".` : 'No hay productos en inventario.'}
                       </Typography>
@@ -175,6 +199,34 @@ function VentasStock() {
                             {s.stockActual}
                           </Typography>
                         </TableCell>
+                        {isAdmin && (
+                          <TableCell align="center">
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                              <Tooltip title="Disminuir stock">
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    disabled={ajustando === s.idProducto || s.stockActual === 0}
+                                    onClick={() => handleAjustar(s.idProducto, -1)}
+                                  >
+                                    <RemoveCircleOutline fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              <Tooltip title="Aumentar stock">
+                                <IconButton
+                                  size="small"
+                                  color="success"
+                                  disabled={ajustando === s.idProducto}
+                                  onClick={() => handleAjustar(s.idProducto, 1)}
+                                >
+                                  <AddCircleOutline fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        )}
                         <TableCell align="center">
                           <Chip
                             label={estadoStock.label}

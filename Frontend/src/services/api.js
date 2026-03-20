@@ -67,8 +67,9 @@ export const favoritosService = {
 };
 
 export const inventarioService = {
-  getAll:        ()   => api.get('/api/inventario'),
-  getByProducto: (id) => api.get(`/api/inventario/${id}`),
+  getAll:        ()              => api.get('/api/inventario'),
+  getByProducto: (id)            => api.get(`/api/inventario/${id}`),
+  ajustar:       (id, cantidad)  => api.patch(`/api/inventario/${id}/ajustar`, { cantidad }),
 };
 
 export const ventasService = {
@@ -79,8 +80,10 @@ export const ventasService = {
 };
 
 export const checkoutService = {
-  confirmar: (idDireccion, idMetodo) =>
+  confirmar:           (idDireccion, idMetodo) =>
     api.post('/api/checkout/confirmar', { idDireccion, idMetodo }),
+  getConcurrenciaLogs: () =>
+    api.get('/api/checkout/concurrencia-logs', { cache: false }),
 };
 
 export const direccionService = {

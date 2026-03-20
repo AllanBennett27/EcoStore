@@ -9,7 +9,8 @@ public record ConfirmarCompraDto(
 
 public record ConfirmarCompraResultDto(
     int IdPedido,
-    decimal Subtotal,
-    decimal Impuesto,
-    decimal TotalFinal
+    decimal TotalFinal,
+    IEnumerable<StockActualizadoDto> Stocks
 );
+
+public record StockActualizadoDto(int IdProducto, int StockActual);

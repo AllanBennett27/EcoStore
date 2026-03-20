@@ -10,4 +10,5 @@ public class ProductoDto
     public string Estado { get; set; } = string.Empty;
     public int IdCategoria { get; set; }
     public string NombreCategoria { get; set; } = string.Empty;
+    public int StockActual { get; set; }
 }

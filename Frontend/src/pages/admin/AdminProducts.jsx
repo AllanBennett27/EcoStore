@@ -36,9 +36,12 @@ import {
   VisibilityOff,
   Visibility,
   Image as ImageIcon,
+  AddCircleOutline,
+  RemoveCircleOutline,
 } from '@mui/icons-material';
 import Header from '../../components/Header';
 import { useProducts } from '../../context/ProductsContext';
+import { inventarioService } from '../../services/api';
 
 function AdminProducts() {
   const {
@@ -52,8 +55,21 @@ function AdminProducts() {
   } = useProducts();
 
   const [statusDialog, setStatusDialog] = useState({ open: false, product: null });
-  const [expanded, setExpanded] = useState(false);
-  const [search, setSearch] = useState('');
+  const [expanded, setExpanded]         = useState(false);
+  const [search, setSearch]             = useState('');
+  const [ajustando, setAjustando]       = useState(null); // idProducto en proceso
+
+  const handleAjustarStock = async (idProducto, delta) => {
+    setAjustando(idProducto);
+    try {
+      await inventarioService.ajustar(idProducto, delta);
+      // SignalR actualiza adminProducts automáticamente vía ProductsContext
+    } catch {
+      // silencioso — en producción mostrarías un toast
+    } finally {
+      setAjustando(null);
+    }
+  };
 
   useEffect(() => {
     loadAdminProducts().catch(() => {});
@@ -196,6 +212,7 @@ function AdminProducts() {
                       <TableCell sx={{ fontWeight: 600 }}>Producto</TableCell>
                       <TableCell sx={{ fontWeight: 600 }} align="center">Estado</TableCell>
                       <TableCell sx={{ fontWeight: 600 }} align="right">Precio</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }} align="center">Stock</TableCell>
                       <TableCell sx={{ fontWeight: 600 }} align="center">Acciones</TableCell>
                     </TableRow>
                   </TableHead>
@@ -254,6 +271,37 @@ function AdminProducts() {
                           <Typography fontWeight={600} color="primary.dark">
                             L.{Number(product.price).toFixed(2)}
                           </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              disabled={ajustando === product.id || product.stock === 0}
+                              onClick={() => handleAjustarStock(product.id, -1)}
+                            >
+                              <RemoveCircleOutline fontSize="small" />
+                            </IconButton>
+                            <Typography
+                              fontWeight={700}
+                              sx={{ minWidth: 28, textAlign: 'center' }}
+                              color={
+                                product.stock === 0 ? 'error.main'
+                                : product.stock <= 5 ? 'warning.main'
+                                : 'success.main'
+                              }
+                            >
+                              {product.stock ?? 0}
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              color="success"
+                              disabled={ajustando === product.id}
+                              onClick={() => handleAjustarStock(product.id, 1)}
+                            >
+                              <AddCircleOutline fontSize="small" />
+                            </IconButton>
+                          </Box>
                         </TableCell>
                         <TableCell align="center">
                           <IconButton

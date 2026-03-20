@@ -38,7 +38,10 @@ builder.Services.AddScoped<IDireccionEnvioRepository, DireccionEnvioRepository>(
 builder.Services.AddScoped<IMetodoPagoRepository, MetodoPagoRepository>();
 builder.Services.AddScoped<IFavoritoRepository, FavoritoRepository>();
 builder.Services.AddScoped<IViewsRepository, ViewsRepository>();
+builder.Services.AddScoped<IVentasRepository, VentasRepository>();
+builder.Services.AddScoped<ICheckoutRepository, CheckoutRepository>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddSingleton<Ecommerce.API.Services.ConcurrenciaLogService>();
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy =>
         policy.RequireAssertion(ctx =>
@@ -110,6 +113,7 @@ app.MapMetodoPagoEndpoints();
 app.MapFavoritoEndpoints();
 app.MapViewsEndpoints();
 app.MapCheckoutEndpoints();
+app.MapVentasEndpoints();
 app.Run();
 
 

@@ -34,6 +34,7 @@ export function CartProvider({ children }) {
 
   // Cargar carrito desde BD al iniciar sesión
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!user) { setCartItems([]); return; }
     carritoService.get()
       .then((res) => setCartItems((res.data ?? []).map(mapItem)))
@@ -62,15 +63,43 @@ export function CartProvider({ children }) {
       }
     });
 
-    connection.on('ProductoActualizado', ({ idProducto, precio }) => {
-      if (precio == null) return;
+    connection.on('ProductoActualizado', ({ idProducto, nombre, precio, imagenUrl }) => {
       const enCarrito = cartItemsRef.current.some(({ product }) => product.id === idProducto);
       if (enCarrito) {
+        setCartItems((prev) =>
+          prev.map((item) =>
+            item.product.id === idProducto
+              ? {
+                  ...item,
+                  product: {
+                    ...item.product,
+                    ...(nombre    != null && { name:     nombre }),
+                    ...(precio    != null && { price:    precio }),
+                    ...(imagenUrl != null && { imageUrl: imagenUrl }),
+                  },
+                }
+              : item
+          )
+        );
         setCartNotification({
-          message: 'El precio de un producto en tu carrito fue actualizado. Revisa el resumen antes de confirmar.',
+          message: 'Un producto de tu carrito fue actualizado por el administrador.',
           severity: 'info',
         });
       }
+    });
+
+    connection.on('StockActualizado', ({ stocks }) => {
+      if (!stocks?.length) return;
+      const current = cartItemsRef.current;
+      stocks.forEach(({ idProducto, stockActual }) => {
+        const item = current.find(({ product }) => product.id === idProducto);
+        if (item && item.quantity > stockActual) {
+          setCartNotification({
+            message: `El stock de "${item.product.name}" bajó a ${stockActual}. Revisa tu carrito.`,
+            severity: 'warning',
+          });
+        }
+      });
     });
 
     connection.start().catch(() => {});

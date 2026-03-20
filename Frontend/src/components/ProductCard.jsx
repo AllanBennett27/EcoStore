@@ -153,6 +153,13 @@ function ProductCard({ product, onAddToCart }) {
           <Typography variant="h6" fontWeight={700} color="primary.dark" sx={{ lineHeight: 1.2 }}>
             L.{Number(product.price).toFixed(2)}
           </Typography>
+          <Typography
+            variant="caption"
+            sx={{ display: "block", mt: 0.3, fontWeight: 500 }}
+            color={product.stock === 0 ? "error.main" : product.stock <= 5 ? "warning.main" : "success.main"}
+          >
+            Stock Disponible: {product.stock}
+          </Typography>
         </Box>
         {!isStaff && (
           <Button
@@ -160,13 +167,14 @@ function ProductCard({ product, onAddToCart }) {
             size="small"
             startIcon={<AddShoppingCart />}
             onClick={() => onAddToCart(product)}
+            disabled={product.stock === 0}
             sx={{
               borderRadius: 2,
               boxShadow: "0 2px 8px rgba(46, 125, 50, 0.25)",
               "&:hover": { boxShadow: "0 4px 12px rgba(46, 125, 50, 0.35)" },
             }}
           >
-            Agregar
+            {product.stock === 0 ? "Sin stock" : "Agregar"}
           </Button>
         )}
       </CardActions>

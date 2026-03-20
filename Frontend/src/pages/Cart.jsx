@@ -22,13 +22,19 @@ import {
 import Header from "../components/Header";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useProducts } from "../context/ProductsContext";
 
 function Cart() {
   const { cartItems, updateQuantity, removeFromCart, clearCart, cartTotal } =
     useCart();
   const { user } = useAuth();
+  const { products } = useProducts();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+
+  // Busca el stock actual del producto en ProductsContext (actualizado en tiempo real)
+  const getStock = (productId) =>
+    products.find((p) => p.id === productId)?.stock ?? Infinity;
 
   const filteredItems = cartItems.filter((item) => {
     if (!search) return true;
@@ -142,133 +148,141 @@ function Cart() {
         >
           {/* Cart Items */}
           <Box sx={{ flex: 1 }}>
-            {filteredItems.map(({ product, quantity }) => (
-              <Card
-                key={product.id}
-                elevation={1}
-                sx={{ mb: 2, borderRadius: 3 }}
-              >
-                <CardContent
+            {filteredItems.map(({ product, quantity }) => {
+              const stock        = getStock(product.id);
+              const excedeLimite = stock !== Infinity && quantity > stock;
+              return (
+                <Card
+                  key={product.id}
+                  elevation={1}
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    flexWrap: { xs: "wrap", sm: "nowrap" },
-                    py: 2,
-                    "&:last-child": { pb: 2 },
+                    mb: 2, borderRadius: 3,
+                    border: excedeLimite ? '1px solid' : 'none',
+                    borderColor: excedeLimite ? 'error.main' : 'transparent',
                   }}
                 >
-                  {/* Product Image */}
-                  <Box
-                    component={RouterLink}
-                    to={`/products/${product.id}`}
+                  <CardContent
                     sx={{
-                      width: 80,
-                      height: 80,
-                      minWidth: 80,
-                      bgcolor: "#f1f8e9",
-                      borderRadius: 2,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      textDecoration: "none",
-                      overflow: "hidden",
+                      gap: 2,
+                      flexWrap: { xs: "wrap", sm: "nowrap" },
+                      py: 2,
+                      "&:last-child": { pb: 2 },
                     }}
                   >
-                    {product.imageUrl ? (
-                      <Box
-                        component="img"
-                        src={product.imageUrl}
-                        alt={product.name}
-                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      <ImageIcon sx={{ fontSize: 40, color: "primary.main" }} />
-                    )}
-                  </Box>
-
-                  {/* Product Info */}
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
+                    {/* Product Image */}
+                    <Box
                       component={RouterLink}
                       to={`/products/${product.id}`}
+                      sx={{
+                        width: 80, height: 80, minWidth: 80,
+                        bgcolor: "#f1f8e9", borderRadius: 2,
+                        display: "flex", alignItems: "center",
+                        justifyContent: "center",
+                        textDecoration: "none", overflow: "hidden",
+                      }}
+                    >
+                      {product.imageUrl ? (
+                        <Box
+                          component="img"
+                          src={product.imageUrl}
+                          alt={product.name}
+                          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <ImageIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                      )}
+                    </Box>
+
+                    {/* Product Info */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        component={RouterLink}
+                        to={`/products/${product.id}`}
+                        variant="subtitle1"
+                        fontWeight={600}
+                        sx={{
+                          textDecoration: "none",
+                          color: "text.primary",
+                          "&:hover": { color: "primary.main" },
+                        }}
+                      >
+                        {product.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap>
+                        {product.description}
+                      </Typography>
+                      <Typography variant="body2" color="primary.main" fontWeight={500}>
+                        L.{Number(product.price).toFixed(2)} c/u
+                      </Typography>
+                      {/* Stock disponible */}
+                      {stock !== Infinity && (
+                        <Typography
+                          variant="caption"
+                          fontWeight={600}
+                          color={
+                            stock === 0 ? "error.main"
+                            : stock <= 5 ? "warning.main"
+                            : "success.main"
+                          }
+                        >
+                          {stock === 0
+                            ? "Sin stock"
+                            : excedeLimite
+                            ? `Solo quedan ${stock} en stock`
+                            : `Stock disponible: ${stock}`}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    {/* Quantity Controls */}
+                    <Box
+                      sx={{
+                        display: "flex", alignItems: "center",
+                        border: "1px solid", borderColor: "divider", borderRadius: 2,
+                      }}
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => updateQuantity(product.id, quantity - 1)}
+                      >
+                        <Remove fontSize="small" />
+                      </IconButton>
+                      <Typography sx={{ px: 1.5, fontWeight: 600, minWidth: 32, textAlign: "center" }}>
+                        {quantity}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        disabled={stock !== Infinity && quantity >= stock}
+                        onClick={() => updateQuantity(product.id, quantity + 1)}
+                      >
+                        <Add fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                    {/* Subtotal */}
+                    <Typography
                       variant="subtitle1"
-                      fontWeight={600}
-                      sx={{
-                        textDecoration: "none",
-                        color: "text.primary",
-                        "&:hover": { color: "primary.main" },
-                      }}
+                      fontWeight={700}
+                      color="primary.dark"
+                      sx={{ minWidth: 90, textAlign: "right" }}
                     >
-                      {product.name}
+                      L.{(Number(product.price) * quantity).toFixed(2)}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {product.description}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="primary.main"
-                      fontWeight={500}
-                    >
-                      L.{Number(product.price).toFixed(2)} c/u
-                    </Typography>
-                  </Box>
 
-                  {/* Quantity Controls */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 2,
-                    }}
-                  >
+                    {/* Remove */}
                     <IconButton
+                      color="error"
                       size="small"
-                      onClick={() => updateQuantity(product.id, quantity - 1)}
+                      onClick={() => removeFromCart(product.id)}
                     >
-                      <Remove fontSize="small" />
+                      <Delete />
                     </IconButton>
-                    <Typography
-                      sx={{
-                        px: 1.5,
-                        fontWeight: 600,
-                        minWidth: 32,
-                        textAlign: "center",
-                      }}
-                    >
-                      {quantity}
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => updateQuantity(product.id, quantity + 1)}
-                    >
-                      <Add fontSize="small" />
-                    </IconButton>
-                  </Box>
-
-                  {/* Subtotal */}
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    color="primary.dark"
-                    sx={{ minWidth: 90, textAlign: "right" }}
-                  >
-                    L.{(Number(product.price) * quantity).toFixed(2)}
-                  </Typography>
-
-                  {/* Remove */}
-                  <IconButton
-                    color="error"
-                    size="small"
-                    onClick={() => removeFromCart(product.id)}
-                  >
-                    <Delete />
-                  </IconButton>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
 
             <Button
               component={RouterLink}
